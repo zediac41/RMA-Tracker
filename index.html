@@ -433,20 +433,10 @@
         <p>Phone-friendly tracking for diagnostics, notes, status updates, and completed work.</p>
       </div>
       <div class="actions">
-        <button id="loadSampleBtn">Load Sample</button>
-        <button id="exportBtn">Export</button>
-        <label class="file-label">
-          Import
-          <input type="file" id="importFile" accept="application/json" />
-        </label>
-        <button id="resetBtn">Reset</button>
-        <button id="newRmaBtn" class="primary">New RMA</button>
+<button id="newRmaBtn" class="primary">New RMA</button>
       </div>
     </div>
-
-    <div id="messageBox" class="message" style="display:none"></div>
-
-    <div class="layout">
+<div class="layout">
       <div class="sidebar">
         <div class="card panel filters">
           <input id="searchInput" type="text" placeholder="Search order, customer, serial..." />
@@ -670,30 +660,6 @@
 
     function saveData() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.records));
-    }
-
-    function showMessage(text) {
-      const box = document.getElementById('messageBox');
-      box.textContent = text;
-      box.style.display = text ? 'block' : 'none';
-    }
-
-    function exportRecords() {
-      const blob = new Blob([JSON.stringify(state.records, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `xotic-rma-export-${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function mergeImportedRecords(existing, imported) {
-      const safeExisting = Array.isArray(existing) ? existing.filter(isValidRecord) : [];
-      const safeImported = Array.isArray(imported) ? imported.filter(isValidRecord) : [];
-      const map = new Map();
-      [...safeExisting, ...safeImported].forEach((record) => map.set(record.id, record));
-      return Array.from(map.values()).sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
     }
 
     function getFilteredRecords() {
@@ -1086,46 +1052,6 @@ renderSelectOptions(document.getElementById('formDeviceType'), deviceOptions, fa
           state.tab = btn.getAttribute('data-tab');
           render();
         });
-      });
-
-      document.getElementById('loadSampleBtn').addEventListener('click', () => {
-        state.records = mergeImportedRecords(state.records, [createSampleRMA()]);
-        state.selectedId = 'sample-rma-1001';
-        saveData();
-        showMessage('Sample RMA loaded.');
-        render();
-      });
-
-      document.getElementById('resetBtn').addEventListener('click', () => {
-        const sample = createSampleRMA();
-        state.records = [sample];
-        state.selectedId = sample.id;
-        saveData();
-        showMessage('Data reset to sample RMA only.');
-        render();
-      });
-
-      document.getElementById('exportBtn').addEventListener('click', () => {
-        exportRecords();
-        showMessage(`Exported ${state.records.length} RMA record${state.records.length === 1 ? '' : 's'}.`);
-      });
-
-      document.getElementById('importFile').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        try {
-          const text = await file.text();
-          const parsed = JSON.parse(text);
-          const imported = Array.isArray(parsed) ? parsed : [parsed];
-          state.records = mergeImportedRecords(state.records, imported);
-          state.selectedId = state.records[0]?.id || null;
-          saveData();
-          showMessage(`Imported ${imported.length} record${imported.length === 1 ? '' : 's'}.`);
-          render();
-        } catch {
-          showMessage('Import failed. Please use a valid JSON export file.');
-        }
-        e.target.value = '';
       });
 
       document.getElementById('formOrderNumber').addEventListener('input', (e) => {
