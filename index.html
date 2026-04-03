@@ -17,18 +17,28 @@
       --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
       --radius: 18px;
     }
+
     * { box-sizing: border-box; }
-    body {
+
+    html, body {
       margin: 0;
+      padding: 0;
       font-family: Arial, Helvetica, sans-serif;
       background: var(--bg);
       color: var(--text);
+      -webkit-text-size-adjust: 100%;
     }
+
+    body {
+      overflow-x: hidden;
+    }
+
     .app {
       max-width: 1400px;
       margin: 0 auto;
       padding: 12px;
     }
+
     .topbar {
       display: flex;
       flex-wrap: wrap;
@@ -37,21 +47,39 @@
       justify-content: space-between;
       margin-bottom: 12px;
     }
+
+    .title {
+      min-width: 0;
+      flex: 1 1 320px;
+    }
+
     .title h1 {
       margin: 0;
       font-size: 28px;
+      line-height: 1.15;
+      word-break: break-word;
     }
+
     .title p {
       margin: 4px 0 0;
       color: var(--muted);
       font-size: 14px;
+      line-height: 1.35;
+      word-break: break-word;
     }
+
     .actions {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+      align-items: center;
     }
-    button, select, input, textarea { font: inherit; }
+
+    button, select, input, textarea {
+      font: inherit;
+      color: var(--text);
+    }
+
     button, .file-label {
       border: 1px solid var(--line);
       background: var(--card);
@@ -59,13 +87,23 @@
       border-radius: 14px;
       padding: 10px 14px;
       cursor: pointer;
+      line-height: 1.2;
     }
+
     button.primary {
       background: var(--blue);
       color: white;
       border-color: var(--blue);
     }
+
+    .file-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     .file-label input { display: none; }
+
     .message {
       background: #fff;
       border: 1px dashed var(--line);
@@ -73,66 +111,105 @@
       padding: 12px 14px;
       margin-bottom: 12px;
       color: var(--muted);
+      line-height: 1.35;
+      overflow-wrap: anywhere;
     }
+
     .card {
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
+      min-width: 0;
     }
+
     .layout {
       display: grid;
       grid-template-columns: 360px minmax(0, 1fr);
       gap: 12px;
       align-items: start;
     }
-    .sidebar, .detail { min-width: 0; }
-    .panel { padding: 14px; }
+
+    .sidebar, .detail {
+      min-width: 0;
+    }
+
+    .panel {
+      padding: 14px;
+      min-width: 0;
+    }
+
     .field, .field-full {
       display: flex;
       flex-direction: column;
       gap: 6px;
+      min-width: 0;
     }
+
     .field label, .section-title {
       font-size: 12px;
       color: var(--muted);
       font-weight: 700;
+      line-height: 1.3;
+      word-break: break-word;
     }
+
     input, select, textarea {
       width: 100%;
+      min-width: 0;
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 10px 12px;
       background: #fff;
       color: var(--text);
+      line-height: 1.35;
     }
+
+    input::placeholder, textarea::placeholder {
+      color: #94a3b8;
+      opacity: 1;
+    }
+
     textarea {
       min-height: 90px;
       resize: vertical;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
     }
+
     .filters {
       display: flex;
       flex-direction: column;
       gap: 10px;
       margin-bottom: 12px;
     }
+
     .tabs {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
     }
+
+    .tabs button {
+      width: 100%;
+      min-width: 0;
+    }
+
     .tabs button.active {
       background: var(--blue);
       color: #fff;
       border-color: var(--blue);
     }
+
     .record-list {
       display: flex;
       flex-direction: column;
       gap: 10px;
       max-height: 78vh;
       overflow: auto;
+      min-width: 0;
     }
+
     .record-item {
       padding: 14px;
       border: 2px solid var(--line);
@@ -140,85 +217,152 @@
       background: #fff;
       text-align: left;
       width: 100%;
+      min-width: 0;
     }
+
     .record-item.selected { outline: 2px solid #cbd5e1; }
     .record-item.testing { border-color: var(--amber); }
     .record-item.waiting { border-color: var(--blue); }
+
     .record-top {
       display: flex;
       justify-content: space-between;
       gap: 10px;
       align-items: flex-start;
+      min-width: 0;
     }
+
+    .record-top > div:first-child {
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+
     .badge {
       padding: 5px 10px;
       border-radius: 999px;
       border: 1px solid var(--line);
       font-size: 12px;
-      white-space: nowrap;
+      white-space: normal;
+      text-align: center;
+      line-height: 1.2;
+      max-width: 140px;
+      overflow-wrap: anywhere;
+      flex: 0 0 auto;
     }
+
     .muted { color: var(--muted); }
-    .small { font-size: 12px; }
-    .tiny { font-size: 11px; }
+    .small { font-size: 12px; line-height: 1.35; }
+    .tiny { font-size: 11px; line-height: 1.35; }
+
     .detail-header {
       display: flex;
       justify-content: space-between;
       gap: 10px;
       align-items: flex-start;
       margin-bottom: 14px;
+      min-width: 0;
     }
+
+    .detail-header > div:first-child {
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+
+    .detail-header h2 {
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      line-height: 1.15;
+    }
+
     .detail-actions {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
     }
+
     .grid-4, .grid-2 {
       display: grid;
       gap: 10px;
+      min-width: 0;
     }
+
     .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
     .warranty-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 8px;
+      min-width: 0;
     }
+
     .warranty-item, .check-item {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 8px;
       border: 1px solid var(--line);
       border-radius: 10px;
       padding: 8px 10px;
       background: #fff;
+      min-width: 0;
     }
+
+    .warranty-item span, .check-item span {
+      display: block;
+      min-width: 0;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      white-space: normal;
+      line-height: 1.3;
+    }
+
     .two-column {
       display: grid;
       grid-template-columns: 1.2fr 0.8fr;
       gap: 12px;
+      min-width: 0;
     }
+
     .checklist, .notes-list {
       display: flex;
       flex-direction: column;
       gap: 8px;
+      min-width: 0;
     }
+
     .check-item.done span {
       text-decoration: line-through;
       color: #94a3b8;
     }
+
     .note-box {
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 12px;
       background: #fff;
+      min-width: 0;
     }
+
+    .note-box div {
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
     .footer-meta {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
       color: var(--muted);
       font-size: 12px;
+      min-width: 0;
     }
+
+    .footer-meta > div {
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      line-height: 1.35;
+    }
+
     dialog {
       border: none;
       border-radius: 22px;
@@ -226,32 +370,44 @@
       padding: 0;
       box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
     }
+
     dialog::backdrop { background: rgba(15, 23, 42, 0.35); }
-    .dialog-inner { padding: 16px; }
-    .dialog-title { margin: 0 0 14px; font-size: 20px; }
+
+    .dialog-inner { padding: 16px; min-width: 0; }
+    .dialog-title { margin: 0 0 14px; font-size: 20px; line-height: 1.2; }
     .dialog-actions {
       display: flex;
       justify-content: flex-end;
       gap: 8px;
       margin-top: 14px;
+      flex-wrap: wrap;
     }
+
     .empty {
       padding: 30px 16px;
       text-align: center;
       color: var(--muted);
+      line-height: 1.4;
     }
+
     @media (max-width: 1100px) {
       .layout, .two-column { grid-template-columns: 1fr; }
       .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
+
     @media (max-width: 700px) {
       .grid-4, .grid-2, .warranty-grid, .footer-meta { grid-template-columns: 1fr 1fr; }
       .app { padding: 10px; }
       .title h1 { font-size: 24px; }
       .detail-header { flex-direction: column; }
+      .actions { width: 100%; }
     }
+
     @media (max-width: 520px) {
       .grid-4, .grid-2, .warranty-grid, .footer-meta { grid-template-columns: 1fr; }
+      .tabs { grid-template-columns: 1fr; }
+      .actions button, .actions .file-label { width: 100%; justify-content: center; }
+      .badge { max-width: 100px; }
     }
   </style>
 </head>
@@ -386,12 +542,7 @@
     };
 
     function createDefaultWarrantyFlags() {
-      return {
-        shipping: false,
-        inWarranty: false,
-        adp: false,
-        partsLabor: false
-      };
+      return { shipping: false, inWarranty: false, adp: false, partsLabor: false };
     }
 
     function createDefaultForm() {
@@ -434,12 +585,7 @@
         deviceType: 'desktop',
         brandModel: 'HYTE Y70 / RTX 4080 SUPER / Ryzen 7 7800X3D',
         serialNumber: 'XPC-RMA-4080-001',
-        warrantyFlags: {
-          shipping: true,
-          inWarranty: false,
-          adp: false,
-          partsLabor: true
-        },
+        warrantyFlags: { shipping: true, inWarranty: false, adp: false, partsLabor: true },
         windowsEdition: 'pro',
         status: 'testing',
         reportedIssues: 'System freezes during long benchmark runs. Customer reported random lockups while gaming and occasional WHEA errors.',
@@ -629,14 +775,14 @@
         btn.innerHTML = `
           <div class="record-top">
             <div>
-              <div><strong>#${escapeHtml(record.orderNumber)}</strong></div>
+              <div><strong>${escapeHtml('#' + record.orderNumber)}</strong></div>
               <div class="muted small">${escapeHtml(record.customerName)}</div>
             </div>
             <div class="badge">${escapeHtml(statusLabel(record.status))}</div>
           </div>
           <div class="muted small" style="margin-top:8px;">${escapeHtml(deviceLabel(record.deviceType))}${record.brandModel ? ' • ' + escapeHtml(record.brandModel) : ''}</div>
           <div style="margin-top:8px;" class="small">${escapeHtml(record.reportedIssues || 'No reported issue entered.')}</div>
-          <div class="muted tiny" style="margin-top:8px; display:flex; justify-content:space-between;">
+          <div class="muted tiny" style="margin-top:8px; display:flex; justify-content:space-between; gap:8px;">
             <span>${record.notes.length} notes</span>
             <span>${new Date(record.lastUpdated).toLocaleDateString()}</span>
           </div>
@@ -688,7 +834,7 @@
         <div class="card panel">
           <div class="detail-header">
             <div>
-              <h2 style="margin:0; font-size:24px;">Order #${escapeHtml(selected.orderNumber)}</h2>
+              <h2 style="margin:0; font-size:24px;">${escapeHtml('Order #' + selected.orderNumber)}</h2>
               <div class="muted">${escapeHtml(selected.customerName)}</div>
             </div>
             <div class="detail-actions">
