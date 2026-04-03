@@ -2,4 +2,4 @@
 
 GitHub-ready static version for GitHub Pages.
 
-This build updates the completed work checklist to remove Customer Contacted and replace Waiting on Approval with Sent to Manufacturer.
+This build removes the Archive/Delete buttons and changes the workflow/tab wording from Archived to Completed.

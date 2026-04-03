@@ -452,7 +452,7 @@
           <input id="searchInput" type="text" placeholder="Search order, customer, serial..." />
           <div class="tabs">
             <button data-tab="active" class="tab-btn active">Active</button>
-            <button data-tab="archived" class="tab-btn">Archived</button>
+            <button data-tab="completed" class="tab-btn">Completed</button>
             <button data-tab="all" class="tab-btn">All</button>
           </div>
           <select id="statusFilter"></select>
@@ -514,16 +514,13 @@
     ];
 
     const statusOptions = [
-      { value: 'received', label: 'Received' },
       { value: 'diagnosing', label: 'Diagnosing' },
       { value: 'waiting_parts', label: 'Waiting on Parts' },
-      { value: 'waiting_customer', label: 'Waiting on Approval' },
+      { value: 'waiting_customer', label: 'Waiting on Customer' },
       { value: 'sent_manufacturer', label: 'Sent to Manufacturer' },
-      { value: 'repair_progress', label: 'Repair in Progress' },
-      { value: 'testing', label: 'Testing' },
-      { value: 'completed', label: 'Passed QA' },
-      { value: 'pay_shipping', label: 'Pay for Shipping' },
-      { value: 'archived', label: 'Archived' }
+      { value: 'repair_progress', label: 'Repair/Testing' },
+      { value: 'completed', label: 'Completed' },
+      { value: 'pay_shipping', label: 'Pay for Shipping' }
     ];
 
     const windowsOptions = [
@@ -700,8 +697,8 @@
     function getFilteredRecords() {
       return state.records
         .filter((r) => {
-          if (state.tab === 'active') return r.status !== 'archived';
-          if (state.tab === 'archived') return r.status === 'archived';
+          if (state.tab === 'active') return r.status !== 'completed';
+          if (state.tab === 'completed') return r.status === 'completed';
           return true;
         })
         .filter((r) => state.statusFilter === 'all' ? true : r.status === state.statusFilter)
@@ -845,11 +842,7 @@
               <h2 style="margin:0; font-size:24px;">${escapeHtml('Order #' + selected.orderNumber + (selected.rmaNumber ? ' / ' + selected.rmaNumber : ''))}</h2>
               <div class="muted">${escapeHtml(selected.customerName)}</div>
             </div>
-            <div class="detail-actions">
-              <button id="archiveBtn">Archive</button>
-              <button id="deleteBtn" style="border-color:var(--red); color:var(--red);">Delete</button>
-            </div>
-          </div>
+</div>
 
           <div class="grid-4">
             <div class="field"><label>Status</label><select id="detailStatus"></select></div>
@@ -926,9 +919,6 @@
           toggleChecklist(Number(e.target.getAttribute('data-check-index')));
         });
       });
-
-      document.getElementById('archiveBtn').addEventListener('click', archiveSelected);
-      document.getElementById('deleteBtn').addEventListener('click', deleteSelected);
       document.getElementById('addNoteBtn').addEventListener('click', addNoteFromDetail);
     }
 
@@ -989,22 +979,6 @@
       }));
     }
 
-    function archiveSelected() {
-      const selected = getSelectedRecord();
-      if (!selected) return;
-      updateRecord(selected.id, { status: 'archived' });
-    }
-
-    function deleteSelected() {
-      const selected = getSelectedRecord();
-      if (!selected) return;
-      state.records = state.records.filter((r) => r.id !== selected.id);
-      const next = getFilteredRecords();
-      state.selectedId = next.length ? next[0].id : null;
-      saveData();
-      render();
-    }
-
     function populateCreateForm() {
       const form = createDefaultForm();
       document.getElementById('formOrderNumber').value = form.orderNumber;
@@ -1015,7 +989,7 @@
 document.getElementById('formReportedIssues').value = form.reportedIssues;
       document.getElementById('formPossibleIssues').value = form.possibleIssues;
 renderSelectOptions(document.getElementById('formDeviceType'), deviceOptions, false);
-      renderSelectOptions(document.getElementById('formStatus'), statusOptions.filter((s) => s.value !== 'archived'), false);
+      renderSelectOptions(document.getElementById('formStatus'), statusOptions.filter((s) => s.value !== 'completed'), false);
       renderSelectOptions(document.getElementById('formWindows'), windowsOptions, false);
       document.getElementById('formDeviceType').value = form.deviceType;
       document.getElementById('formStatus').value = form.status;
