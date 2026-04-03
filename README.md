@@ -1,23 +1,18 @@
 # Xotic PC RMA Tracker
 
-This is a static GitHub Pages version of the RMA tracker.
+GitHub-ready static version for GitHub Pages.
 
-## Files
-- `index.html` — the full app
+## Included files
+- `index.html`
+- `.github/workflows/deploy-pages.yml`
+- `README.md`
 
-## Publish on GitHub Pages
-1. Create a repo or use an existing repo.
-2. Upload `index.html` to the repo root, or place it in a `docs` folder.
-3. In GitHub repo settings, enable GitHub Pages.
-4. Choose:
-   - `Deploy from a branch`
-   - Branch: your main branch
-   - Folder: `/root` or `/docs`
+## Publish steps
+1. Upload all files to your GitHub repo.
+2. In GitHub go to **Settings > Pages**.
+3. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+4. Push to `main` to publish.
 
 ## Notes
-- This version stores data in the browser using localStorage.
-- Data is not shared between devices automatically.
-- Use the Export/Import buttons to move data manually.
-
-## Suggested next step
-Connect this to Supabase or Firebase if you want shared data across phones/computers.
+- Data is stored in browser localStorage.
+- Export and Import move data manually between devices/browsers.

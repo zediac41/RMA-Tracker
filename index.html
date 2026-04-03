@@ -13,12 +13,10 @@
       --muted: #64748b;
       --blue: #2563eb;
       --amber: #d97706;
-      --green: #15803d;
       --red: #dc2626;
       --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
       --radius: 18px;
     }
-
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -26,13 +24,11 @@
       background: var(--bg);
       color: var(--text);
     }
-
     .app {
       max-width: 1400px;
       margin: 0 auto;
       padding: 12px;
     }
-
     .topbar {
       display: flex;
       flex-wrap: wrap;
@@ -41,28 +37,21 @@
       justify-content: space-between;
       margin-bottom: 12px;
     }
-
     .title h1 {
       margin: 0;
       font-size: 28px;
     }
-
     .title p {
       margin: 4px 0 0;
       color: var(--muted);
       font-size: 14px;
     }
-
     .actions {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
     }
-
-    button, select, input, textarea {
-      font: inherit;
-    }
-
+    button, select, input, textarea { font: inherit; }
     button, .file-label {
       border: 1px solid var(--line);
       background: var(--card);
@@ -71,15 +60,12 @@
       padding: 10px 14px;
       cursor: pointer;
     }
-
     button.primary {
       background: var(--blue);
       color: white;
       border-color: var(--blue);
     }
-
     .file-label input { display: none; }
-
     .message {
       background: #fff;
       border: 1px dashed var(--line);
@@ -88,63 +74,30 @@
       margin-bottom: 12px;
       color: var(--muted);
     }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
     .card {
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
     }
-
-    .stat-card {
-      padding: 14px;
-    }
-
-    .stat-card .label {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .stat-card .value {
-      font-size: 28px;
-      font-weight: 700;
-      margin-top: 4px;
-    }
-
     .layout {
       display: grid;
       grid-template-columns: 360px minmax(0, 1fr);
       gap: 12px;
       align-items: start;
     }
-
-    .sidebar, .detail {
-      min-width: 0;
-    }
-
-    .panel {
-      padding: 14px;
-    }
-
+    .sidebar, .detail { min-width: 0; }
+    .panel { padding: 14px; }
     .field, .field-full {
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
-
     .field label, .section-title {
       font-size: 12px;
       color: var(--muted);
       font-weight: 700;
     }
-
     input, select, textarea {
       width: 100%;
       border: 1px solid var(--line);
@@ -153,39 +106,33 @@
       background: #fff;
       color: var(--text);
     }
-
     textarea {
       min-height: 90px;
       resize: vertical;
     }
-
     .filters {
       display: flex;
       flex-direction: column;
       gap: 10px;
       margin-bottom: 12px;
     }
-
     .tabs {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
     }
-
     .tabs button.active {
       background: var(--blue);
       color: #fff;
       border-color: var(--blue);
     }
-
     .record-list {
       display: flex;
       flex-direction: column;
       gap: 10px;
-      max-height: 72vh;
+      max-height: 78vh;
       overflow: auto;
     }
-
     .record-item {
       padding: 14px;
       border: 2px solid var(--line);
@@ -194,21 +141,15 @@
       text-align: left;
       width: 100%;
     }
-
-    .record-item.selected {
-      outline: 2px solid #cbd5e1;
-    }
-
+    .record-item.selected { outline: 2px solid #cbd5e1; }
     .record-item.testing { border-color: var(--amber); }
     .record-item.waiting { border-color: var(--blue); }
-
     .record-top {
       display: flex;
       justify-content: space-between;
       gap: 10px;
       align-items: flex-start;
     }
-
     .badge {
       padding: 5px 10px;
       border-radius: 999px;
@@ -216,11 +157,9 @@
       font-size: 12px;
       white-space: nowrap;
     }
-
     .muted { color: var(--muted); }
     .small { font-size: 12px; }
     .tiny { font-size: 11px; }
-
     .detail-header {
       display: flex;
       justify-content: space-between;
@@ -228,27 +167,22 @@
       align-items: flex-start;
       margin-bottom: 14px;
     }
-
     .detail-actions {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
     }
-
     .grid-4, .grid-2 {
       display: grid;
       gap: 10px;
     }
-
     .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-
     .warranty-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 8px;
     }
-
     .warranty-item, .check-item {
       display: flex;
       align-items: center;
@@ -258,31 +192,26 @@
       padding: 8px 10px;
       background: #fff;
     }
-
     .two-column {
       display: grid;
       grid-template-columns: 1.2fr 0.8fr;
       gap: 12px;
     }
-
     .checklist, .notes-list {
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
-
     .check-item.done span {
       text-decoration: line-through;
       color: #94a3b8;
     }
-
     .note-box {
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 12px;
       background: #fff;
     }
-
     .footer-meta {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -290,7 +219,6 @@
       color: var(--muted);
       font-size: 12px;
     }
-
     dialog {
       border: none;
       border-radius: 22px;
@@ -298,9 +226,7 @@
       padding: 0;
       box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
     }
-
     dialog::backdrop { background: rgba(15, 23, 42, 0.35); }
-
     .dialog-inner { padding: 16px; }
     .dialog-title { margin: 0 0 14px; font-size: 20px; }
     .dialog-actions {
@@ -309,27 +235,23 @@
       gap: 8px;
       margin-top: 14px;
     }
-
     .empty {
       padding: 30px 16px;
       text-align: center;
       color: var(--muted);
     }
-
     @media (max-width: 1100px) {
       .layout, .two-column { grid-template-columns: 1fr; }
       .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
-
     @media (max-width: 700px) {
-      .stats, .grid-4, .grid-2, .warranty-grid, .footer-meta { grid-template-columns: 1fr 1fr; }
+      .grid-4, .grid-2, .warranty-grid, .footer-meta { grid-template-columns: 1fr 1fr; }
       .app { padding: 10px; }
       .title h1 { font-size: 24px; }
       .detail-header { flex-direction: column; }
     }
-
     @media (max-width: 520px) {
-      .stats, .grid-4, .grid-2, .warranty-grid, .footer-meta { grid-template-columns: 1fr; }
+      .grid-4, .grid-2, .warranty-grid, .footer-meta { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -353,13 +275,6 @@
     </div>
 
     <div id="messageBox" class="message" style="display:none"></div>
-
-    <div class="stats">
-      <div class="card stat-card"><div class="label">Active</div><div class="value" id="statActive">0</div></div>
-      <div class="card stat-card"><div class="label">Waiting</div><div class="value" id="statWaiting">0</div></div>
-      <div class="card stat-card"><div class="label">Testing</div><div class="value" id="statTesting">0</div></div>
-      <div class="card stat-card"><div class="label">Completed</div><div class="value" id="statCompleted">0</div></div>
-    </div>
 
     <div class="layout">
       <div class="sidebar">
@@ -691,13 +606,6 @@
       });
     }
 
-    function updateStats() {
-      document.getElementById('statActive').textContent = state.records.filter((r) => r.status !== 'archived').length;
-      document.getElementById('statWaiting').textContent = state.records.filter((r) => ['waiting_customer', 'waiting_parts', 'sent_manufacturer', 'pay_shipping'].includes(r.status)).length;
-      document.getElementById('statTesting').textContent = state.records.filter((r) => r.status === 'testing').length;
-      document.getElementById('statCompleted').textContent = state.records.filter((r) => r.status === 'completed').length;
-    }
-
     function renderRecordList() {
       const list = document.getElementById('recordList');
       const filtered = getFilteredRecords();
@@ -1022,7 +930,6 @@
     }
 
     function render() {
-      updateStats();
       renderRecordList();
       renderDetail();
       document.querySelectorAll('.tab-btn').forEach((btn) => {
