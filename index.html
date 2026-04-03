@@ -457,13 +457,13 @@
       <h2 class="dialog-title">Create RMA Record</h2>
       <div class="grid-2">
         <div class="field"><label>Order Number</label><input id="formOrderNumber" /></div>
+        <div class="field"><label>RMA Number</label><input id="formRmaNumber" /></div>
         <div class="field"><label>Customer Name</label><input id="formCustomerName" /></div>
         <div class="field"><label>Device Type</label><select id="formDeviceType"></select></div>
         <div class="field"><label>Status</label><select id="formStatus"></select></div>
         <div class="field"><label>Brand / Model</label><input id="formBrandModel" /></div>
         <div class="field"><label>Serial Number</label><input id="formSerialNumber" /></div>
         <div class="field"><label>Windows</label><select id="formWindows"></select></div>
-        <div class="field"><label>Manufacturer Case #</label><input id="formManufacturerCase" /></div>
       </div>
 
       <div style="margin-top:12px;">
@@ -473,9 +473,7 @@
 
       <div class="field-full" style="margin-top:12px;"><label>Reported Issues</label><textarea id="formReportedIssues"></textarea></div>
       <div class="field-full" style="margin-top:12px;"><label>Possible Issues / Observations</label><textarea id="formPossibleIssues"></textarea></div>
-      <div class="field-full" style="margin-top:12px;"><label>Parts Replaced</label><textarea id="formPartsReplaced"></textarea></div>
-
-      <div class="dialog-actions">
+<div class="dialog-actions">
         <button id="cancelDialogBtn">Cancel</button>
         <button id="createDialogBtn" class="primary">Create RMA</button>
       </div>
@@ -549,6 +547,7 @@
       return {
         orderNumber: '',
         customerName: '',
+        rmaNumber: '',
         deviceType: 'desktop',
         brandModel: '',
         serialNumber: '',
@@ -556,9 +555,7 @@
         windowsEdition: 'home',
         status: 'received',
         reportedIssues: '',
-        possibleIssues: '',
-        manufacturerCase: '',
-        partsReplaced: ''
+        possibleIssues: ''
       };
     }
 
@@ -582,6 +579,7 @@
         id: 'sample-rma-1001',
         orderNumber: 'D315187',
         customerName: 'John Carter',
+        rmaNumber: 'RMA-1001',
         deviceType: 'desktop',
         brandModel: 'HYTE Y70 / RTX 4080 SUPER / Ryzen 7 7800X3D',
         serialNumber: 'XPC-RMA-4080-001',
@@ -590,8 +588,6 @@
         status: 'testing',
         reportedIssues: 'System freezes during long benchmark runs. Customer reported random lockups while gaming and occasional WHEA errors.',
         possibleIssues: 'Initial symptoms pointed to GPU, but issue remained with a test GPU installed. Suspected riser cable instability under load.',
-        manufacturerCase: 'N/A',
-        partsReplaced: 'Replaced riser cable with known-good unit from test chassis.',
         checklist: defaultChecklist.map((item) => ({
           label: item,
           done: completedItems.has(item),
@@ -775,7 +771,7 @@
         btn.innerHTML = `
           <div class="record-top">
             <div>
-              <div><strong>${escapeHtml('#' + record.orderNumber)}</strong></div>
+              <div><strong>${escapeHtml('#' + record.orderNumber)}</strong>${record.rmaNumber ? `<span class="muted small"> / ${escapeHtml(record.rmaNumber)}</span>` : ""}</div>
               <div class="muted small">${escapeHtml(record.customerName)}</div>
             </div>
             <div class="badge">${escapeHtml(statusLabel(record.status))}</div>
@@ -834,7 +830,7 @@
         <div class="card panel">
           <div class="detail-header">
             <div>
-              <h2 style="margin:0; font-size:24px;">${escapeHtml('Order #' + selected.orderNumber)}</h2>
+              <h2 style="margin:0; font-size:24px;">${escapeHtml('Order #' + selected.orderNumber + (selected.rmaNumber ? ' / ' + selected.rmaNumber : ''))}</h2>
               <div class="muted">${escapeHtml(selected.customerName)}</div>
             </div>
             <div class="detail-actions">
@@ -855,19 +851,16 @@
           </div>
 
           <div class="grid-2" style="margin-top:12px;">
+            <div class="field"><label>RMA Number</label><input id="detailRmaNumber" value="${escapeAttr(selected.rmaNumber || '')}" /></div>
             <div class="field"><label>Brand / Model</label><input id="detailBrandModel" value="${escapeAttr(selected.brandModel)}" /></div>
             <div class="field"><label>Serial Number</label><input id="detailSerialNumber" value="${escapeAttr(selected.serialNumber)}" /></div>
-            <div class="field"><label>Manufacturer Case #</label><input id="detailManufacturerCase" value="${escapeAttr(selected.manufacturerCase)}" /></div>
           </div>
 
           <div class="grid-2" style="margin-top:12px;">
             <div class="field"><label>Reported Issues</label><textarea id="detailReportedIssues">${escapeHtml(selected.reportedIssues)}</textarea></div>
             <div class="field"><label>Possible Issues / Observations</label><textarea id="detailPossibleIssues">${escapeHtml(selected.possibleIssues)}</textarea></div>
           </div>
-
-          <div class="field-full" style="margin-top:12px;"><label>Parts Replaced</label><textarea id="detailPartsReplaced">${escapeHtml(selected.partsReplaced)}</textarea></div>
-
-          <div class="two-column" style="margin-top:12px;">
+<div class="two-column" style="margin-top:12px;">
             <div class="card panel">
               <div class="section-title" style="margin-bottom:10px;">Completed Work Checklist</div>
               <div class="checklist">${checklistHtml}</div>
@@ -903,12 +896,11 @@
       detailWindows.addEventListener('change', () => updateSelectedField('windowsEdition', detailWindows.value));
       detailDeviceType.addEventListener('change', () => updateSelectedField('deviceType', detailDeviceType.value));
 
+      bindDetailInput('detailRmaNumber', 'rmaNumber');
       bindDetailInput('detailBrandModel', 'brandModel');
       bindDetailInput('detailSerialNumber', 'serialNumber');
-      bindDetailInput('detailManufacturerCase', 'manufacturerCase');
       bindDetailInput('detailReportedIssues', 'reportedIssues');
       bindDetailInput('detailPossibleIssues', 'possibleIssues');
-      bindDetailInput('detailPartsReplaced', 'partsReplaced');
 
       document.querySelectorAll('[data-warranty-key]').forEach((el) => {
         el.addEventListener('change', (e) => {
@@ -1005,13 +997,12 @@
       const form = createDefaultForm();
       document.getElementById('formOrderNumber').value = form.orderNumber;
       document.getElementById('formCustomerName').value = form.customerName;
+      document.getElementById('formRmaNumber').value = form.rmaNumber || '';
       document.getElementById('formBrandModel').value = form.brandModel;
       document.getElementById('formSerialNumber').value = form.serialNumber;
-      document.getElementById('formManufacturerCase').value = form.manufacturerCase;
-      document.getElementById('formReportedIssues').value = form.reportedIssues;
+document.getElementById('formReportedIssues').value = form.reportedIssues;
       document.getElementById('formPossibleIssues').value = form.possibleIssues;
-      document.getElementById('formPartsReplaced').value = form.partsReplaced;
-      renderSelectOptions(document.getElementById('formDeviceType'), deviceOptions, false);
+renderSelectOptions(document.getElementById('formDeviceType'), deviceOptions, false);
       renderSelectOptions(document.getElementById('formStatus'), statusOptions.filter((s) => s.value !== 'archived'), false);
       renderSelectOptions(document.getElementById('formWindows'), windowsOptions, false);
       document.getElementById('formDeviceType').value = form.deviceType;
@@ -1029,6 +1020,7 @@
       return {
         orderNumber: document.getElementById('formOrderNumber').value.trim(),
         customerName: document.getElementById('formCustomerName').value.trim(),
+        rmaNumber: document.getElementById('formRmaNumber').value.trim(),
         deviceType: document.getElementById('formDeviceType').value,
         brandModel: document.getElementById('formBrandModel').value.trim(),
         serialNumber: document.getElementById('formSerialNumber').value.trim(),
@@ -1037,9 +1029,7 @@
         status: document.getElementById('formStatus').value,
         reportedIssues: document.getElementById('formReportedIssues').value.trim(),
         possibleIssues: document.getElementById('formPossibleIssues').value.trim(),
-        manufacturerCase: document.getElementById('formManufacturerCase').value.trim(),
-        partsReplaced: document.getElementById('formPartsReplaced').value.trim()
-      };
+};
     }
 
     function createRecordFromDialog() {

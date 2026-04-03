@@ -7,11 +7,20 @@ GitHub-ready static version for GitHub Pages.
 - `.github/workflows/deploy-pages.yml`
 - `README.md`
 
-## Fixes in this build
-- text wrapping fixed for phone and desktop
-- warranty/checklist text no longer gets cut off
-- card and note text wraps correctly
-- header/action buttons stack better on smaller screens
+## Current fields
+- Order Number
+- RMA Number
+- Customer Name
+- Device Type
+- Brand / Model
+- Serial Number
+- Warranty checkboxes
+- Windows
+- Status
+- Reported Issues
+- Possible Issues / Observations
+- Checklist
+- Timestamped notes
 
 ## Publish steps
 1. Upload all files to your GitHub repo.
