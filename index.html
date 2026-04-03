@@ -6,7 +6,7 @@
   <title>Xotic PC RMA Tracker</title>
   <style>
     :root {
-      --bg: #f8fafc;
+      --bg: #eef1f4;
       --card: #ffffff;
       --line: #dbe3ee;
       --text: #0f172a;
@@ -509,8 +509,7 @@
       'OS reinstalled',
       'Manufacturer contacted',
       'Sent to manufacturer',
-      'Passed QA',
-      'Pay for Shipping'
+      'Passed QA'
     ];
 
     const statusOptions = [
@@ -563,7 +562,7 @@
         serialNumber: '',
         warrantyFlags: createDefaultWarrantyFlags(),
         windowsEdition: 'home',
-        status: 'received',
+        status: 'diagnosing',
         reportedIssues: '',
         possibleIssues: ''
       };
