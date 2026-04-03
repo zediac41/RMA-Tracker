@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Xotic PC RMA Tracker</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --line: #dbe3ee;
+      --text: #0f172a;
+      --muted: #64748b;
+      --blue: #2563eb;
+      --amber: #d97706;
+      --green: #15803d;
+      --red: #dc2626;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .title p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    button, select, input, textarea {
+      font: inherit;
+    }
+
+    button, .file-label {
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--blue);
+      color: white;
+      border-color: var(--blue);
+    }
+
+    .file-label input { display: none; }
+
+    .message {
+      background: #fff;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      color: var(--muted);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .stat-card {
+      padding: 14px;
+    }
+
+    .stat-card .label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .stat-card .value {
+      font-size: 28px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .sidebar, .detail {
+      min-width: 0;
+    }
+
+    .panel {
+      padding: 14px;
+    }
+
+    .field, .field-full {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label, .section-title {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .filters {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .tabs button.active {
+      background: var(--blue);
+      color: #fff;
+      border-color: var(--blue);
+    }
+
+    .record-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 72vh;
+      overflow: auto;
+    }
+
+    .record-item {
+      padding: 14px;
+      border: 2px solid var(--line);
+      border-radius: 20px;
+      background: #fff;
+      text-align: left;
+      width: 100%;
+    }
+
+    .record-item.selected {
+      outline: 2px solid #cbd5e1;
+    }
+
+    .record-item.testing { border-color: var(--amber); }
+    .record-item.waiting { border-color: var(--blue); }
+
+    .record-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .badge {
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .muted { color: var(--muted); }
+    .small { font-size: 12px; }
+    .tiny { font-size: 11px; }
+
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+
+    .detail-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .grid-4, .grid-2 {
+      display: grid;
+      gap: 10px;
+    }
+
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .warranty-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .warranty-item, .check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: #fff;
+    }
+
+    .two-column {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 12px;
+    }
+
+    .checklist, .notes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .check-item.done span {
+      text-decoration: line-through;
+      color: #94a3b8;
+    }
+
+    .note-box {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .footer-meta {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    dialog {
+      border: none;
+      border-radius: 22px;
+      width: min(920px, calc(100vw - 20px));
+      padding: 0;
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+    }
+
+    dialog::backdrop { background: rgba(15, 23, 42, 0.35); }
+
+    .dialog-inner { padding: 16px; }
+    .dialog-title { margin: 0 0 14px; font-size: 20px; }
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .empty {
+      padding: 30px 16px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    @media (max-width: 1100px) {
+      .layout, .two-column { grid-template-columns: 1fr; }
+      .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 700px) {
+      .stats, .grid-4, .grid-2, .warranty-grid, .footer-meta { grid-template-columns: 1fr 1fr; }
+      .app { padding: 10px; }
+      .title h1 { font-size: 24px; }
+      .detail-header { flex-direction: column; }
+    }
+
+    @media (max-width: 520px) {
+      .stats, .grid-4, .grid-2, .warranty-grid, .footer-meta { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="title">
+        <h1>Xotic PC RMA Tracker</h1>
+        <p>Phone-friendly tracking for diagnostics, notes, status updates, and completed work.</p>
+      </div>
+      <div class="actions">
+        <button id="loadSampleBtn">Load Sample</button>
+        <button id="exportBtn">Export</button>
+        <label class="file-label">
+          Import
+          <input type="file" id="importFile" accept="application/json" />
+        </label>
+        <button id="resetBtn">Reset</button>
+        <button id="newRmaBtn" class="primary">New RMA</button>
+      </div>
+    </div>
+
+    <div id="messageBox" class="message" style="display:none"></div>
+
+    <div class="stats">
+      <div class="card stat-card"><div class="label">Active</div><div class="value" id="statActive">0</div></div>
+      <div class="card stat-card"><div class="label">Waiting</div><div class="value" id="statWaiting">0</div></div>
+      <div class="card stat-card"><div class="label">Testing</div><div class="value" id="statTesting">0</div></div>
+      <div class="card stat-card"><div class="label">Completed</div><div class="value" id="statCompleted">0</div></div>
+    </div>
+
+    <div class="layout">
+      <div class="sidebar">
+        <div class="card panel filters">
+          <input id="searchInput" type="text" placeholder="Search order, customer, serial..." />
+          <div class="tabs">
+            <button data-tab="active" class="tab-btn active">Active</button>
+            <button data-tab="archived" class="tab-btn">Archived</button>
+            <button data-tab="all" class="tab-btn">All</button>
+          </div>
+          <select id="statusFilter"></select>
+        </div>
+        <div id="recordList" class="record-list"></div>
+      </div>
+
+      <div class="detail">
+        <div id="detailView"></div>
+      </div>
+    </div>
+  </div>
+
+  <dialog id="rmaDialog">
+    <div class="dialog-inner">
+      <h2 class="dialog-title">Create RMA Record</h2>
+      <div class="grid-2">
+        <div class="field"><label>Order Number</label><input id="formOrderNumber" /></div>
+        <div class="field"><label>Customer Name</label><input id="formCustomerName" /></div>
+        <div class="field"><label>Device Type</label><select id="formDeviceType"></select></div>
+        <div class="field"><label>Status</label><select id="formStatus"></select></div>
+        <div class="field"><label>Brand / Model</label><input id="formBrandModel" /></div>
+        <div class="field"><label>Serial Number</label><input id="formSerialNumber" /></div>
+        <div class="field"><label>Windows</label><select id="formWindows"></select></div>
+        <div class="field"><label>Manufacturer Case #</label><input id="formManufacturerCase" /></div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <div class="section-title">Warranty</div>
+        <div class="warranty-grid" id="formWarrantyFlags"></div>
+      </div>
+
+      <div class="field-full" style="margin-top:12px;"><label>Reported Issues</label><textarea id="formReportedIssues"></textarea></div>
+      <div class="field-full" style="margin-top:12px;"><label>Possible Issues / Observations</label><textarea id="formPossibleIssues"></textarea></div>
+      <div class="field-full" style="margin-top:12px;"><label>Parts Replaced</label><textarea id="formPartsReplaced"></textarea></div>
+
+      <div class="dialog-actions">
+        <button id="cancelDialogBtn">Cancel</button>
+        <button id="createDialogBtn" class="primary">Create RMA</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    const STORAGE_KEY = 'xotic-rma-tracker-v1';
+
+    const defaultChecklist = [
+      'Visual inspection completed',
+      'Boot test completed',
+      'Temps checked',
+      'RAM tested',
+      'Drive tested',
+      'Windows & drivers updated',
+      'BIOS updated',
+      'OCCT / Burn-in Completed',
+      'OS reinstalled',
+      'Customer contacted',
+      'Manufacturer contacted',
+      'Waiting on approval',
+      'Ready for final QA',
+      'Packed for shipment'
+    ];
+
+    const statusOptions = [
+      { value: 'received', label: 'Received' },
+      { value: 'diagnosing', label: 'Diagnosing' },
+      { value: 'waiting_customer', label: 'Waiting on Customer' },
+      { value: 'waiting_parts', label: 'Waiting on Parts' },
+      { value: 'sent_manufacturer', label: 'Sent to Manufacturer' },
+      { value: 'repair_progress', label: 'Repair in Progress' },
+      { value: 'testing', label: 'Testing' },
+      { value: 'pay_shipping', label: 'Pay for Shipping' },
+      { value: 'completed', label: 'Completed' },
+      { value: 'archived', label: 'Archived' }
+    ];
+
+    const windowsOptions = [
+      { value: 'home', label: 'Home' },
+      { value: 'pro', label: 'Pro' }
+    ];
+
+    const deviceOptions = [
+      { value: 'desktop', label: 'Desktop' },
+      { value: 'laptop', label: 'Laptop' },
+      { value: 'other', label: 'Other' }
+    ];
+
+    const warrantyOptions = [
+      { key: 'inWarranty', label: 'In Manufacturer Warranty' },
+      { key: 'adp', label: 'ADP' },
+      { key: 'partsLabor', label: 'Parts & Labor' },
+      { key: 'shipping', label: 'Shipping' }
+    ];
+
+    const state = {
+      records: [],
+      selectedId: null,
+      search: '',
+      tab: 'active',
+      statusFilter: 'all'
+    };
+
+    function createDefaultWarrantyFlags() {
+      return {
+        shipping: false,
+        inWarranty: false,
+        adp: false,
+        partsLabor: false
+      };
+    }
+
+    function createDefaultForm() {
+      return {
+        orderNumber: '',
+        customerName: '',
+        deviceType: 'desktop',
+        brandModel: '',
+        serialNumber: '',
+        warrantyFlags: createDefaultWarrantyFlags(),
+        windowsEdition: 'home',
+        status: 'received',
+        reportedIssues: '',
+        possibleIssues: '',
+        manufacturerCase: '',
+        partsReplaced: ''
+      };
+    }
+
+    function generateId() {
+      return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    }
+
+    function createSampleRMA() {
+      const createdAt = new Date().toISOString();
+      const completedItems = new Set([
+        'Visual inspection completed',
+        'Boot test completed',
+        'Temps checked',
+        'RAM tested',
+        'Drive tested',
+        'Windows & drivers updated',
+        'Customer contacted'
+      ]);
+
+      return {
+        id: 'sample-rma-1001',
+        orderNumber: 'D315187',
+        customerName: 'John Carter',
+        deviceType: 'desktop',
+        brandModel: 'HYTE Y70 / RTX 4080 SUPER / Ryzen 7 7800X3D',
+        serialNumber: 'XPC-RMA-4080-001',
+        warrantyFlags: {
+          shipping: true,
+          inWarranty: false,
+          adp: false,
+          partsLabor: true
+        },
+        windowsEdition: 'pro',
+        status: 'testing',
+        reportedIssues: 'System freezes during long benchmark runs. Customer reported random lockups while gaming and occasional WHEA errors.',
+        possibleIssues: 'Initial symptoms pointed to GPU, but issue remained with a test GPU installed. Suspected riser cable instability under load.',
+        manufacturerCase: 'N/A',
+        partsReplaced: 'Replaced riser cable with known-good unit from test chassis.',
+        checklist: defaultChecklist.map((item) => ({
+          label: item,
+          done: completedItems.has(item),
+          completedAt: completedItems.has(item) ? createdAt : null
+        })),
+        notes: [
+          {
+            id: 'sample-note-1',
+            text: 'Installed a test GPU and still reproduced freezing, which made the original GPU less likely to be the cause.',
+            createdAt
+          },
+          {
+            id: 'sample-note-2',
+            text: 'Swapped riser cable with a known-good cable from another Y70. WHEA errors stopped and system has remained stable so far.',
+            createdAt
+          },
+          {
+            id: 'sample-note-3',
+            text: 'Continuing overnight testing before marking unit ready for final QA.',
+            createdAt
+          }
+        ],
+        createdAt,
+        lastUpdated: createdAt,
+        completedAt: null
+      };
+    }
+
+    function isValidRecord(record) {
+      return !!(
+        record &&
+        typeof record.id === 'string' &&
+        typeof record.orderNumber === 'string' &&
+        typeof record.customerName === 'string' &&
+        Array.isArray(record.checklist) &&
+        Array.isArray(record.notes) &&
+        record.warrantyFlags &&
+        typeof record.warrantyFlags.shipping === 'boolean' &&
+        typeof record.warrantyFlags.inWarranty === 'boolean' &&
+        typeof record.warrantyFlags.adp === 'boolean' &&
+        typeof record.warrantyFlags.partsLabor === 'boolean'
+      );
+    }
+
+    function runChecks() {
+      const sample = createSampleRMA();
+      console.assert(sample.windowsEdition === 'pro', 'Sample should default to Windows Pro.');
+      console.assert(sample.deviceType === 'desktop', 'Sample should be a desktop.');
+      console.assert(sample.warrantyFlags.shipping === true, 'Desktop sample should have Shipping checked.');
+      console.assert(sample.warrantyFlags.inWarranty === false, 'Sample manufacturer warranty should default to unchecked.');
+      console.assert(sample.warrantyFlags.partsLabor === true, 'Sample should support Parts & Labor checkbox.');
+      console.assert(sample.checklist.findIndex((item) => item.label === 'OCCT / Burn-in Completed') > sample.checklist.findIndex((item) => item.label === 'BIOS updated'), 'OCCT / Burn-in Completed should appear below BIOS updated.');
+      console.assert(isValidRecord(sample), 'Sample RMA should match the expected record shape.');
+      console.assert(warrantyOptions[0].label === 'In Manufacturer Warranty', 'Warranty label order should keep manufacturer warranty first.');
+    }
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [createSampleRMA()];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [createSampleRMA()];
+        const valid = parsed.filter(isValidRecord);
+        return valid.length ? valid : [createSampleRMA()];
+      } catch {
+        return [createSampleRMA()];
+      }
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.records));
+    }
+
+    function showMessage(text) {
+      const box = document.getElementById('messageBox');
+      box.textContent = text;
+      box.style.display = text ? 'block' : 'none';
+    }
+
+    function exportRecords() {
+      const blob = new Blob([JSON.stringify(state.records, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `xotic-rma-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function mergeImportedRecords(existing, imported) {
+      const safeExisting = Array.isArray(existing) ? existing.filter(isValidRecord) : [];
+      const safeImported = Array.isArray(imported) ? imported.filter(isValidRecord) : [];
+      const map = new Map();
+      [...safeExisting, ...safeImported].forEach((record) => map.set(record.id, record));
+      return Array.from(map.values()).sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
+    }
+
+    function getFilteredRecords() {
+      return state.records
+        .filter((r) => {
+          if (state.tab === 'active') return r.status !== 'archived';
+          if (state.tab === 'archived') return r.status === 'archived';
+          return true;
+        })
+        .filter((r) => state.statusFilter === 'all' ? true : r.status === state.statusFilter)
+        .filter((r) => {
+          const haystack = [r.orderNumber, r.customerName, r.brandModel, r.serialNumber, r.reportedIssues, r.possibleIssues].join(' ').toLowerCase();
+          return haystack.includes(state.search.toLowerCase());
+        })
+        .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
+    }
+
+    function getSelectedRecord() {
+      const filtered = getFilteredRecords();
+      return state.records.find((r) => r.id === state.selectedId) || filtered[0] || null;
+    }
+
+    function statusLabel(status) {
+      return statusOptions.find((s) => s.value === status)?.label || status;
+    }
+
+    function deviceLabel(type) {
+      if (type === 'laptop') return 'Laptop';
+      if (type === 'other') return 'Other';
+      return 'Desktop';
+    }
+
+    function renderSelectOptions(select, options, includeAll) {
+      select.innerHTML = '';
+      if (includeAll) {
+        const opt = document.createElement('option');
+        opt.value = 'all';
+        opt.textContent = 'All Statuses';
+        select.appendChild(opt);
+      }
+      options.forEach((option) => {
+        const opt = document.createElement('option');
+        opt.value = option.value;
+        opt.textContent = option.label;
+        select.appendChild(opt);
+      });
+    }
+
+    function renderWarrantyCheckboxes(container, warrantyFlags, onChange) {
+      container.innerHTML = '';
+      warrantyOptions.forEach((option) => {
+        const label = document.createElement('label');
+        label.className = 'warranty-item';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.checked = Boolean(warrantyFlags[option.key]);
+        input.addEventListener('change', () => onChange(option.key, input.checked));
+        const span = document.createElement('span');
+        span.textContent = option.label;
+        label.appendChild(input);
+        label.appendChild(span);
+        container.appendChild(label);
+      });
+    }
+
+    function updateStats() {
+      document.getElementById('statActive').textContent = state.records.filter((r) => r.status !== 'archived').length;
+      document.getElementById('statWaiting').textContent = state.records.filter((r) => ['waiting_customer', 'waiting_parts', 'sent_manufacturer', 'pay_shipping'].includes(r.status)).length;
+      document.getElementById('statTesting').textContent = state.records.filter((r) => r.status === 'testing').length;
+      document.getElementById('statCompleted').textContent = state.records.filter((r) => r.status === 'completed').length;
+    }
+
+    function renderRecordList() {
+      const list = document.getElementById('recordList');
+      const filtered = getFilteredRecords();
+      list.innerHTML = '';
+
+      if (!filtered.length) {
+        const empty = document.createElement('div');
+        empty.className = 'card empty';
+        empty.innerHTML = '<div>No RMAs yet</div><div class="small">Create your first RMA record to start tracking notes, tasks, and status updates.</div>';
+        list.appendChild(empty);
+        return;
+      }
+
+      filtered.forEach((record) => {
+        const btn = document.createElement('button');
+        btn.className = 'record-item';
+        if (record.id === state.selectedId) btn.classList.add('selected');
+        if (record.status === 'testing') btn.classList.add('testing');
+        if (['waiting_customer', 'waiting_parts', 'sent_manufacturer', 'pay_shipping'].includes(record.status)) btn.classList.add('waiting');
+
+        btn.innerHTML = `
+          <div class="record-top">
+            <div>
+              <div><strong>#${escapeHtml(record.orderNumber)}</strong></div>
+              <div class="muted small">${escapeHtml(record.customerName)}</div>
+            </div>
+            <div class="badge">${escapeHtml(statusLabel(record.status))}</div>
+          </div>
+          <div class="muted small" style="margin-top:8px;">${escapeHtml(deviceLabel(record.deviceType))}${record.brandModel ? ' • ' + escapeHtml(record.brandModel) : ''}</div>
+          <div style="margin-top:8px;" class="small">${escapeHtml(record.reportedIssues || 'No reported issue entered.')}</div>
+          <div class="muted tiny" style="margin-top:8px; display:flex; justify-content:space-between;">
+            <span>${record.notes.length} notes</span>
+            <span>${new Date(record.lastUpdated).toLocaleDateString()}</span>
+          </div>
+        `;
+
+        btn.addEventListener('click', () => {
+          state.selectedId = record.id;
+          render();
+        });
+
+        list.appendChild(btn);
+      });
+    }
+
+    function renderDetail() {
+      const detail = document.getElementById('detailView');
+      const selected = getSelectedRecord();
+
+      if (!selected) {
+        detail.innerHTML = '<div class="card empty">Select or create an RMA.</div>';
+        return;
+      }
+
+      const warrantyHtml = warrantyOptions.map((option) => `
+        <label class="warranty-item">
+          <input type="checkbox" data-warranty-key="${option.key}" ${selected.warrantyFlags[option.key] ? 'checked' : ''} />
+          <span>${escapeHtml(option.label)}</span>
+        </label>
+      `).join('');
+
+      const checklistHtml = selected.checklist.map((item, index) => `
+        <label class="check-item ${item.done ? 'done' : ''}">
+          <input type="checkbox" data-check-index="${index}" ${item.done ? 'checked' : ''} />
+          <span>${escapeHtml(item.label)}</span>
+        </label>
+        ${item.completedAt ? `<div class="muted tiny" style="margin:-4px 0 4px 30px;">Completed ${new Date(item.completedAt).toLocaleString()}</div>` : ''}
+      `).join('');
+
+      const notesHtml = selected.notes.length
+        ? selected.notes.map((note) => `
+            <div class="note-box">
+              <div class="small">${escapeHtml(note.text)}</div>
+              <div class="muted tiny" style="margin-top:8px;">${new Date(note.createdAt).toLocaleString()}</div>
+            </div>
+          `).join('')
+        : '<div class="muted small">No notes added yet.</div>';
+
+      detail.innerHTML = `
+        <div class="card panel">
+          <div class="detail-header">
+            <div>
+              <h2 style="margin:0; font-size:24px;">Order #${escapeHtml(selected.orderNumber)}</h2>
+              <div class="muted">${escapeHtml(selected.customerName)}</div>
+            </div>
+            <div class="detail-actions">
+              <button id="archiveBtn">Archive</button>
+              <button id="deleteBtn" style="border-color:var(--red); color:var(--red);">Delete</button>
+            </div>
+          </div>
+
+          <div class="grid-4">
+            <div class="field"><label>Status</label><select id="detailStatus"></select></div>
+            <div class="field"><label>Windows</label><select id="detailWindows"></select></div>
+            <div class="field"><label>Device Type</label><select id="detailDeviceType"></select></div>
+          </div>
+
+          <div style="margin-top:12px;">
+            <div class="section-title">Warranty</div>
+            <div class="warranty-grid" id="detailWarrantyGrid">${warrantyHtml}</div>
+          </div>
+
+          <div class="grid-2" style="margin-top:12px;">
+            <div class="field"><label>Brand / Model</label><input id="detailBrandModel" value="${escapeAttr(selected.brandModel)}" /></div>
+            <div class="field"><label>Serial Number</label><input id="detailSerialNumber" value="${escapeAttr(selected.serialNumber)}" /></div>
+            <div class="field"><label>Manufacturer Case #</label><input id="detailManufacturerCase" value="${escapeAttr(selected.manufacturerCase)}" /></div>
+          </div>
+
+          <div class="grid-2" style="margin-top:12px;">
+            <div class="field"><label>Reported Issues</label><textarea id="detailReportedIssues">${escapeHtml(selected.reportedIssues)}</textarea></div>
+            <div class="field"><label>Possible Issues / Observations</label><textarea id="detailPossibleIssues">${escapeHtml(selected.possibleIssues)}</textarea></div>
+          </div>
+
+          <div class="field-full" style="margin-top:12px;"><label>Parts Replaced</label><textarea id="detailPartsReplaced">${escapeHtml(selected.partsReplaced)}</textarea></div>
+
+          <div class="two-column" style="margin-top:12px;">
+            <div class="card panel">
+              <div class="section-title" style="margin-bottom:10px;">Completed Work Checklist</div>
+              <div class="checklist">${checklistHtml}</div>
+            </div>
+            <div class="card panel">
+              <div class="section-title" style="margin-bottom:10px;">Notes History</div>
+              <textarea id="quickNoteInput" placeholder="Add a quick note..." style="min-height:100px;"></textarea>
+              <button id="addNoteBtn" class="primary" style="margin-top:8px; width:100%;">Add Timestamped Note</button>
+              <div style="margin:12px 0; border-top:1px solid var(--line);"></div>
+              <div class="notes-list">${notesHtml}</div>
+            </div>
+          </div>
+
+          <div class="footer-meta" style="margin-top:12px;">
+            <div>Created: ${new Date(selected.createdAt).toLocaleString()}</div>
+            <div>Last Updated: ${new Date(selected.lastUpdated).toLocaleString()}</div>
+            <div>${selected.completedAt ? `Completed: ${new Date(selected.completedAt).toLocaleString()}` : 'Not completed yet'}</div>
+          </div>
+        </div>
+      `;
+
+      const detailStatus = document.getElementById('detailStatus');
+      const detailWindows = document.getElementById('detailWindows');
+      const detailDeviceType = document.getElementById('detailDeviceType');
+      renderSelectOptions(detailStatus, statusOptions, false);
+      renderSelectOptions(detailWindows, windowsOptions, false);
+      renderSelectOptions(detailDeviceType, deviceOptions, false);
+      detailStatus.value = selected.status;
+      detailWindows.value = selected.windowsEdition;
+      detailDeviceType.value = selected.deviceType;
+
+      detailStatus.addEventListener('change', () => updateSelectedField('status', detailStatus.value));
+      detailWindows.addEventListener('change', () => updateSelectedField('windowsEdition', detailWindows.value));
+      detailDeviceType.addEventListener('change', () => updateSelectedField('deviceType', detailDeviceType.value));
+
+      bindDetailInput('detailBrandModel', 'brandModel');
+      bindDetailInput('detailSerialNumber', 'serialNumber');
+      bindDetailInput('detailManufacturerCase', 'manufacturerCase');
+      bindDetailInput('detailReportedIssues', 'reportedIssues');
+      bindDetailInput('detailPossibleIssues', 'possibleIssues');
+      bindDetailInput('detailPartsReplaced', 'partsReplaced');
+
+      document.querySelectorAll('[data-warranty-key]').forEach((el) => {
+        el.addEventListener('change', (e) => {
+          const key = e.target.getAttribute('data-warranty-key');
+          updateSelectedWarrantyFlag(key, e.target.checked);
+        });
+      });
+
+      document.querySelectorAll('[data-check-index]').forEach((el) => {
+        el.addEventListener('change', (e) => {
+          toggleChecklist(Number(e.target.getAttribute('data-check-index')));
+        });
+      });
+
+      document.getElementById('archiveBtn').addEventListener('click', archiveSelected);
+      document.getElementById('deleteBtn').addEventListener('click', deleteSelected);
+      document.getElementById('addNoteBtn').addEventListener('click', addNoteFromDetail);
+    }
+
+    function bindDetailInput(id, field) {
+      const el = document.getElementById(id);
+      el.addEventListener('input', () => updateSelectedField(field, el.value));
+    }
+
+    function updateSelectedField(field, value) {
+      const selected = getSelectedRecord();
+      if (!selected) return;
+      const patch = { [field]: value };
+      if (field === 'status') patch.completedAt = value === 'completed' ? new Date().toISOString() : null;
+      updateRecord(selected.id, patch);
+    }
+
+    function updateSelectedWarrantyFlag(flag, checked) {
+      const selected = getSelectedRecord();
+      if (!selected) return;
+      updateRecord(selected.id, {
+        warrantyFlags: {
+          ...selected.warrantyFlags,
+          [flag]: checked
+        }
+      });
+    }
+
+    function updateRecord(id, updater) {
+      state.records = state.records.map((record) => {
+        if (record.id !== id) return record;
+        const updated = typeof updater === 'function' ? updater(record) : { ...record, ...updater };
+        return { ...updated, lastUpdated: new Date().toISOString() };
+      });
+      saveData();
+      render();
+    }
+
+    function toggleChecklist(index) {
+      const selected = getSelectedRecord();
+      if (!selected) return;
+      updateRecord(selected.id, (record) => ({
+        ...record,
+        checklist: record.checklist.map((item, i) => i !== index ? item : {
+          ...item,
+          done: !item.done,
+          completedAt: !item.done ? new Date().toISOString() : null
+        })
+      }));
+    }
+
+    function addNoteFromDetail() {
+      const selected = getSelectedRecord();
+      const input = document.getElementById('quickNoteInput');
+      if (!selected || !input.value.trim()) return;
+      updateRecord(selected.id, (record) => ({
+        ...record,
+        notes: [{ id: generateId(), text: input.value.trim(), createdAt: new Date().toISOString() }, ...record.notes]
+      }));
+    }
+
+    function archiveSelected() {
+      const selected = getSelectedRecord();
+      if (!selected) return;
+      updateRecord(selected.id, { status: 'archived' });
+    }
+
+    function deleteSelected() {
+      const selected = getSelectedRecord();
+      if (!selected) return;
+      state.records = state.records.filter((r) => r.id !== selected.id);
+      const next = getFilteredRecords();
+      state.selectedId = next.length ? next[0].id : null;
+      saveData();
+      render();
+    }
+
+    function populateCreateForm() {
+      const form = createDefaultForm();
+      document.getElementById('formOrderNumber').value = form.orderNumber;
+      document.getElementById('formCustomerName').value = form.customerName;
+      document.getElementById('formBrandModel').value = form.brandModel;
+      document.getElementById('formSerialNumber').value = form.serialNumber;
+      document.getElementById('formManufacturerCase').value = form.manufacturerCase;
+      document.getElementById('formReportedIssues').value = form.reportedIssues;
+      document.getElementById('formPossibleIssues').value = form.possibleIssues;
+      document.getElementById('formPartsReplaced').value = form.partsReplaced;
+      renderSelectOptions(document.getElementById('formDeviceType'), deviceOptions, false);
+      renderSelectOptions(document.getElementById('formStatus'), statusOptions.filter((s) => s.value !== 'archived'), false);
+      renderSelectOptions(document.getElementById('formWindows'), windowsOptions, false);
+      document.getElementById('formDeviceType').value = form.deviceType;
+      document.getElementById('formStatus').value = form.status;
+      document.getElementById('formWindows').value = form.windowsEdition;
+      renderWarrantyCheckboxes(document.getElementById('formWarrantyFlags'), form.warrantyFlags, () => {});
+    }
+
+    function readCreateForm() {
+      const warrantyFlags = createDefaultWarrantyFlags();
+      document.querySelectorAll('#formWarrantyFlags input[type="checkbox"]').forEach((checkbox, index) => {
+        warrantyFlags[warrantyOptions[index].key] = checkbox.checked;
+      });
+
+      return {
+        orderNumber: document.getElementById('formOrderNumber').value.trim(),
+        customerName: document.getElementById('formCustomerName').value.trim(),
+        deviceType: document.getElementById('formDeviceType').value,
+        brandModel: document.getElementById('formBrandModel').value.trim(),
+        serialNumber: document.getElementById('formSerialNumber').value.trim(),
+        warrantyFlags,
+        windowsEdition: document.getElementById('formWindows').value,
+        status: document.getElementById('formStatus').value,
+        reportedIssues: document.getElementById('formReportedIssues').value.trim(),
+        possibleIssues: document.getElementById('formPossibleIssues').value.trim(),
+        manufacturerCase: document.getElementById('formManufacturerCase').value.trim(),
+        partsReplaced: document.getElementById('formPartsReplaced').value.trim()
+      };
+    }
+
+    function createRecordFromDialog() {
+      const form = readCreateForm();
+      if (!form.orderNumber || !form.customerName) return;
+      const now = new Date().toISOString();
+      const newRecord = {
+        id: generateId(),
+        ...form,
+        checklist: defaultChecklist.map((item) => ({ label: item, done: false, completedAt: null })),
+        notes: [],
+        createdAt: now,
+        lastUpdated: now,
+        completedAt: null
+      };
+      state.records = [newRecord, ...state.records];
+      state.selectedId = newRecord.id;
+      saveData();
+      document.getElementById('rmaDialog').close();
+      render();
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(value).replace(/`/g, '&#96;');
+    }
+
+    function render() {
+      updateStats();
+      renderRecordList();
+      renderDetail();
+      document.querySelectorAll('.tab-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn.getAttribute('data-tab') === state.tab);
+      });
+      document.getElementById('statusFilter').value = state.statusFilter;
+    }
+
+    function init() {
+      runChecks();
+      state.records = loadData();
+      state.selectedId = state.records[0]?.id || null;
+
+      renderSelectOptions(document.getElementById('statusFilter'), statusOptions, true);
+      populateCreateForm();
+      render();
+
+      document.getElementById('searchInput').addEventListener('input', (e) => {
+        state.search = e.target.value;
+        render();
+      });
+
+      document.getElementById('statusFilter').addEventListener('change', (e) => {
+        state.statusFilter = e.target.value;
+        render();
+      });
+
+      document.querySelectorAll('.tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.tab = btn.getAttribute('data-tab');
+          render();
+        });
+      });
+
+      document.getElementById('loadSampleBtn').addEventListener('click', () => {
+        state.records = mergeImportedRecords(state.records, [createSampleRMA()]);
+        state.selectedId = 'sample-rma-1001';
+        saveData();
+        showMessage('Sample RMA loaded.');
+        render();
+      });
+
+      document.getElementById('resetBtn').addEventListener('click', () => {
+        const sample = createSampleRMA();
+        state.records = [sample];
+        state.selectedId = sample.id;
+        saveData();
+        showMessage('Data reset to sample RMA only.');
+        render();
+      });
+
+      document.getElementById('exportBtn').addEventListener('click', () => {
+        exportRecords();
+        showMessage(`Exported ${state.records.length} RMA record${state.records.length === 1 ? '' : 's'}.`);
+      });
+
+      document.getElementById('importFile').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          const imported = Array.isArray(parsed) ? parsed : [parsed];
+          state.records = mergeImportedRecords(state.records, imported);
+          state.selectedId = state.records[0]?.id || null;
+          saveData();
+          showMessage(`Imported ${imported.length} record${imported.length === 1 ? '' : 's'}.`);
+          render();
+        } catch {
+          showMessage('Import failed. Please use a valid JSON export file.');
+        }
+        e.target.value = '';
+      });
+
+      document.getElementById('newRmaBtn').addEventListener('click', () => {
+        populateCreateForm();
+        document.getElementById('rmaDialog').showModal();
+      });
+
+      document.getElementById('cancelDialogBtn').addEventListener('click', () => {
+        document.getElementById('rmaDialog').close();
+      });
+
+      document.getElementById('createDialogBtn').addEventListener('click', createRecordFromDialog);
+    }
+
+    init();
+  </script>
+</body>
+</html>
