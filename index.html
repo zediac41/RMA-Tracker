@@ -470,8 +470,8 @@
     <div class="dialog-inner">
       <h2 class="dialog-title">Create RMA Record</h2>
       <div class="grid-2">
-        <div class="field"><label>Order Number</label><input id="formOrderNumber" /></div>
-        <div class="field"><label>RMA Number</label><input id="formRmaNumber" /></div>
+        <div class="field"><label>Order Number</label><input id="formOrderNumber" inputmode="numeric" pattern="[0-9]*" /></div>
+        <div class="field"><label>RMA Number</label><input id="formRmaNumber" inputmode="numeric" pattern="[0-9]*" /></div>
         <div class="field"><label>Customer Name</label><input id="formCustomerName" /></div>
         <div class="field"><label>Device Type</label><select id="formDeviceType"></select></div>
         <div class="field"><label>Status</label><select id="formStatus"></select></div>
@@ -519,8 +519,8 @@
       { value: 'waiting_customer', label: 'Waiting on Customer' },
       { value: 'sent_manufacturer', label: 'Sent to Manufacturer' },
       { value: 'repair_progress', label: 'Repair/Testing' },
-      { value: 'completed', label: 'Completed' },
-      { value: 'pay_shipping', label: 'Pay for Shipping' }
+      { value: 'pay_shipping', label: 'Pay for Shipping' },
+      { value: 'completed', label: 'Completed' }
     ];
 
     const windowsOptions = [
@@ -571,6 +571,9 @@
 
     function generateId() {
       return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    }
+    function numbersOnly(value) {
+      return String(value ?? '').replace(/\D+/g, '');
     }
 
     function createSampleRMA() {
@@ -981,9 +984,9 @@
 
     function populateCreateForm() {
       const form = createDefaultForm();
-      document.getElementById('formOrderNumber').value = form.orderNumber;
+      document.getElementById('formOrderNumber').value = numbersOnly(form.orderNumber);
       document.getElementById('formCustomerName').value = form.customerName;
-      document.getElementById('formRmaNumber').value = form.rmaNumber || '';
+      document.getElementById('formRmaNumber').value = numbersOnly(form.rmaNumber || '');
       document.getElementById('formBrandModel').value = form.brandModel;
       document.getElementById('formSerialNumber').value = form.serialNumber;
 document.getElementById('formReportedIssues').value = form.reportedIssues;
@@ -1004,9 +1007,9 @@ renderSelectOptions(document.getElementById('formDeviceType'), deviceOptions, fa
       });
 
       return {
-        orderNumber: document.getElementById('formOrderNumber').value.trim(),
+        orderNumber: numbersOnly(document.getElementById('formOrderNumber').value.trim()),
         customerName: document.getElementById('formCustomerName').value.trim(),
-        rmaNumber: document.getElementById('formRmaNumber').value.trim(),
+        rmaNumber: numbersOnly(document.getElementById('formRmaNumber').value.trim()),
         deviceType: document.getElementById('formDeviceType').value,
         brandModel: document.getElementById('formBrandModel').value.trim(),
         serialNumber: document.getElementById('formSerialNumber').value.trim(),
@@ -1124,6 +1127,14 @@ renderSelectOptions(document.getElementById('formDeviceType'), deviceOptions, fa
           showMessage('Import failed. Please use a valid JSON export file.');
         }
         e.target.value = '';
+      });
+
+      document.getElementById('formOrderNumber').addEventListener('input', (e) => {
+        e.target.value = numbersOnly(e.target.value);
+      });
+
+      document.getElementById('formRmaNumber').addEventListener('input', (e) => {
+        e.target.value = numbersOnly(e.target.value);
       });
 
       document.getElementById('newRmaBtn').addEventListener('click', () => {
