@@ -2,4 +2,4 @@
 
 GitHub-ready static version for GitHub Pages.
 
-This build uses a softer light gray page background to reduce brightness.
+This build softens the full UI color palette so the page, cards, inputs, and controls are less stark and bright.
