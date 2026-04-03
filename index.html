@@ -177,6 +177,17 @@
       white-space: pre-wrap;
     }
 
+    input[type="checkbox"] {
+      width: auto;
+      min-width: 16px;
+      max-width: 16px;
+      height: 16px;
+      margin: 0;
+      padding: 0;
+      flex: 0 0 16px;
+      accent-color: var(--blue);
+    }
+
     .filters {
       display: flex;
       flex-direction: column;
@@ -306,11 +317,13 @@
       background: #fff;
       min-width: 0;
       font-size: 11px;
+      justify-content: flex-start;
     }
 
     .warranty-item span, .check-item span {
       display: block;
       min-width: 0;
+      flex: 1 1 auto;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
