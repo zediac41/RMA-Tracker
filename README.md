@@ -1,62 +1,49 @@
-# Xotic PC RMA Tracker + Google Sheets + Email Starter
+# Xotic PC RMA Tracker — Supabase Drop-in
 
-This package includes:
+This package is ready to upload to your GitHub repo.
 
-- `index.html` for GitHub Pages
-- `.github/workflows/deploy-pages.yml` for Pages deployment
-- `google-apps-script/Code.gs`
-- `google-apps-script/appsscript.json`
+## What you need to edit first
+Open `index.html` and replace:
 
-## What it does
-- Sends an email when a new RMA is created
-- Sends an email when the status changes
-- Logs both events into Google Sheets
+- `PASTE_YOUR_PROJECT_URL_HERE`
+- `PASTE_YOUR_PUBLISHABLE_KEY_HERE`
 
-## Setup
+with your real Supabase values.
 
-### 1. Create a Google Sheet
-Create a sheet named `RMAs`.
+## This package expects these columns on `public.rmas`
+- id
+- created_at
+- updated_at
+- order_number
+- rma_number
+- customer_name
+- device_type
+- brand_model
+- serial_number
+- windows_edition
+- status
+- reported_issues
+- possible_issues
+- in_manufacturer_warranty
+- adp
+- parts_labor
+- shipping
+- checklist_json
+- notes_json
+- completed_at
 
-Recommended headers for row 1:
-- Timestamp
-- Event Type
-- Order Number
-- RMA Number
-- Customer Name
-- Device Type
-- Brand / Model
-- Serial Number
-- Status
-- Reported Issues
-- Possible Issues
-- Warranty Text
-- Warranty JSON
+## If you have not added the extra JSON/date columns yet
+Run this in Supabase SQL Editor:
 
-### 2. Create the Apps Script web app
-Open Apps Script and paste in:
-- `google-apps-script/Code.gs`
-- `google-apps-script/appsscript.json`
+```sql
+alter table public.rmas
+add column if not exists checklist_json jsonb not null default '[]'::jsonb,
+add column if not exists notes_json jsonb not null default '[]'::jsonb,
+add column if not exists completed_at timestamptz null;
+```
 
-Then update these values in `Code.gs`:
-- `SHEET_ID`
-- `SHARED_SECRET`
-- `EMAIL_TO`
-
-Deploy it as a **Web app**:
-- Execute as: **Me**
-- Who has access: **Anyone**
-
-Copy the web app URL.
-
-### 3. Update the GitHub Pages app
-In `index.html`, replace:
-- `PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE`
-- `PASTE_YOUR_SHARED_SECRET_HERE`
-
-### 4. Publish to GitHub Pages
-Upload the files to your repo and set **Settings > Pages > Source** to **GitHub Actions**.
-
-## Notes
-- Email send is triggered from the browser event through Apps Script
-- Status-change emails fire only when the status value actually changes
-- The shared secret should match in both `index.html` and `Code.gs`
+## GitHub Pages
+1. Upload the files to your repo
+2. In GitHub, go to Settings > Pages
+3. Set Source to GitHub Actions
+4. Push to main
