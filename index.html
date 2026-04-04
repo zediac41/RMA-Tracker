@@ -71,6 +71,10 @@
     .checklist,.notes-list { display:flex; flex-direction:column; gap:8px; }
     .check-item.done span { text-decoration:line-through; color:#94a3b8; }
     .note-box { border:1px solid var(--line); border-radius:14px; padding:12px; background:#e9edf1; }
+    .damage-photo-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px; margin-top:10px; }
+    .damage-photo-tile { border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#dfe5eb; }
+    .damage-photo-tile img { display:block; width:100%; height:100px; object-fit:cover; }
+    .damage-photo-tile button { width:100%; border:none; border-top:1px solid var(--line); border-radius:0; background:#e9edf1; padding:8px; font-size:12px; }
     .footer-meta { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; color:var(--muted); font-size:12px; }
     dialog { border:none; border-radius:22px; width:min(920px,calc(100vw - 20px)); padding:0; box-shadow:0 20px 60px rgba(15,23,42,.18); background:var(--card); }
     dialog::backdrop { background:rgba(15,23,42,.35); }
@@ -170,6 +174,15 @@
 
     <div class="field-full" style="margin-top:12px;"><label>Reported Issues</label><textarea id="formReportedIssues"></textarea></div>
     <div class="field-full" style="margin-top:12px;"><label>Possible Issues / Observations</label><textarea id="formPossibleIssues"></textarea></div>
+
+    <div class="field-full" style="margin-top:12px;">
+      <label>Arrival Damage / Blemish Photos</label>
+      <div class="photo-box">
+        <div id="formDamagePhotoWrap"><input id="formDamagePhotos" type="file" accept="image/*" multiple /></div>
+        <div id="formDamagePhotosPreview" class="small muted">No damage or blemish photos added.</div>
+      </div>
+    </div>
+
     <div class="dialog-actions">
       <button id="cancelDialogBtn">Cancel</button>
       <button id="createDialogBtn" class="primary">Create RMA</button>
@@ -202,7 +215,7 @@ const warrantyOptions = [
   { key:'partsLabor', label:'Parts & Labor' },
   { key:'shipping', label:'Shipping' }
 ];
-const state = { records:[], selectedId:null, search:'', tab:'active', statusFilter:'all', createSerialPhotoData:'' };
+const state = { records:[], selectedId:null, search:'', tab:'active', statusFilter:'all', createSerialPhotoData:'', createDamagePhotos:[] };
 
 const showBanner = (m,v='info') => { const el=document.getElementById('statusBanner'); el.textContent=m; el.className=`banner ${v}`; };
 const clearBanner = () => { const el=document.getElementById('statusBanner'); el.textContent=''; el.className='banner'; };
@@ -212,7 +225,7 @@ const deviceLabel = (t) => t === 'laptop' ? 'Laptop' : t === 'other' ? 'Other' :
 const createDefaultForm = () => ({
   orderNumber:'', rmaNumber:'', customerName:'', deviceType:'desktop', purchaseDate:'', brandModel:'',
   warranty:{ inWarranty:{ enabled:false, years:'' }, adp:{ enabled:false, years:'' }, partsLabor:{ enabled:false, years:'' }, shipping:{ enabled:false, years:'' } },
-  windowsEdition:'home', status:'diagnosing', reportedIssues:'', possibleIssues:'', serialPhotoData:''
+  windowsEdition:'home', status:'diagnosing', reportedIssues:'', possibleIssues:'', serialPhotoData:'', damagePhotos:[]
 });
 const escapeHtml = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const escapeAttr = (v) => escapeHtml(v).replace(/`/g,'&#96;');
@@ -250,6 +263,7 @@ function mapRowToRecord(row){
     purchaseDate:row.purchase_date || '',
     brandModel:row.brand_model || '',
     serialPhotoData:row.serial_photo_data || '',
+    damagePhotos:Array.isArray(row.damage_photos_json) ? row.damage_photos_json : [],
     warranty:warrantyFromRow(row),
     windowsEdition:row.windows_edition || 'home',
     status:row.status || 'diagnosing',
@@ -272,6 +286,7 @@ function mapRecordToRow(record){
     purchase_date:record.purchaseDate || null,
     brand_model:record.brandModel,
     serial_photo_data:record.serialPhotoData || '',
+    damage_photos_json:record.damagePhotos || [],
     windows_edition:record.windowsEdition,
     status:record.status,
     reported_issues:record.reportedIssues,
@@ -360,6 +375,41 @@ function renderPhotoPreview(containerId, data, options = {}){
     deleteBtn.addEventListener('click', onDelete);
   }
 }
+
+function renderDamagePhotoList(containerId, photos, { onDelete = null } = {}){
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!photos || !photos.length) {
+    el.innerHTML = '<span class="small muted">No damage or blemish photos added.</span>';
+    return;
+  }
+  el.innerHTML = `<div class="damage-photo-grid">${
+    photos.map((photo, index) => `
+      <div class="damage-photo-tile">
+        <img src="${photo}" alt="Damage photo ${index + 1}">
+        <button type="button" data-damage-index="${index}">View photo</button>
+      </div>
+    `).join('')
+  }</div>`;
+  el.querySelectorAll('[data-damage-index]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.getAttribute('data-damage-index'));
+      openSerialPhotoModal(photos[idx]);
+    });
+  });
+  if (onDelete) {
+    const grid = el.querySelector('.damage-photo-grid');
+    photos.forEach((_, index) => {
+      const wrap = document.createElement('button');
+      wrap.type = 'button';
+      wrap.textContent = 'Delete';
+      wrap.style.marginTop = '6px';
+      wrap.addEventListener('click', () => onDelete(index));
+      grid.children[index].appendChild(wrap);
+    });
+  }
+}
+
 async function sendRmaEmail(payload){
   const { error } = await supabase.functions.invoke('send-rma-email', { body: payload });
   if (error) { console.error('Email function failed:', error); showBanner('Email send failed, but database save still worked.', 'error'); }
@@ -475,6 +525,14 @@ function renderDetail(){
         <div class="card panel"><div class="section-title" style="margin-bottom:10px;">Notes History</div><textarea id="quickNoteInput" placeholder="Add a quick note..." style="min-height:100px;"></textarea><button id="addNoteBtn" class="primary" style="margin-top:8px; width:100%;">Add Timestamped Note</button><div style="margin:12px 0; border-top:1px solid var(--line);"></div><div class="notes-list">${notesHtml}</div></div>
       </div>
 
+      <div class="field-full" style="margin-top:12px;">
+        <label>Arrival Damage / Blemish Photos</label>
+        <div class="photo-box">
+          <div id="detailDamagePhotoWrap"><input id="detailDamagePhotos" type="file" accept="image/*" multiple /></div>
+          <div id="detailDamagePhotosPreview"></div>
+        </div>
+      </div>
+
       <div class="footer-meta" style="margin-top:12px;">
         <div>Created: ${selected.createdAt ? new Date(selected.createdAt).toLocaleString() : ''}</div>
         <div>Last Updated: ${selected.updatedAt ? new Date(selected.updatedAt).toLocaleString() : ''}</div>
@@ -522,6 +580,33 @@ function renderDetail(){
         state.records = state.records.map(r => r.id === saved.id ? saved : r);
         render();
       }
+    }
+  });
+
+  renderDamagePhotoList('detailDamagePhotosPreview', selected.damagePhotos || [], {
+    onDelete: async (index) => {
+      if (!confirm('Delete this damage photo?')) return;
+      const current = getSelectedRecord();
+      const nextPhotos = (current.damagePhotos || []).filter((_, i) => i !== index);
+      const saved = await updateRma(current.id, { ...current, damagePhotos: nextPhotos });
+      if (saved) {
+        state.records = state.records.map(r => r.id === saved.id ? saved : r);
+        render();
+      }
+    }
+  });
+
+  document.getElementById('detailDamagePhotos').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const current = getSelectedRecord();
+    const newPhotos = [];
+    for (const file of files) newPhotos.push(await fileToDataUrl(file));
+    const saved = await updateRma(current.id, { ...current, damagePhotos:[...(current.damagePhotos || []), ...newPhotos] });
+    e.target.value = '';
+    if (saved) {
+      state.records = state.records.map(r => r.id === saved.id ? saved : r);
+      render();
     }
   });
 
@@ -608,6 +693,8 @@ function populateCreateForm(){
   document.getElementById('formSerialPhoto').value = '';
   const createWrap = document.getElementById('formSerialPhotoWrap');
   if (createWrap) createWrap.classList.remove('hidden');
+  renderDamagePhotoList('formDamagePhotosPreview', []);
+  document.getElementById('formDamagePhotos').value = '';
 }
 function readWarrantyGrid(containerId){
   const result = createDefaultForm().warranty;
@@ -632,7 +719,8 @@ function readCreateForm(){
     status:document.getElementById('formStatus').value,
     reportedIssues:document.getElementById('formReportedIssues').value.trim(),
     possibleIssues:document.getElementById('formPossibleIssues').value.trim(),
-    serialPhotoData:state.createSerialPhotoData || ''
+    serialPhotoData:state.createSerialPhotoData || '',
+    damagePhotos:state.createDamagePhotos || []
   };
 }
 async function createRecordFromDialog(){
@@ -712,6 +800,26 @@ async function init(){
         renderPhotoPreview('formSerialPhotoPreview', '');
       }
     });
+  });
+
+  function refreshCreateDamagePreview(){
+    renderDamagePhotoList('formDamagePhotosPreview', state.createDamagePhotos, {
+      onDelete: (index) => {
+        if (!confirm('Delete this damage photo?')) return;
+        state.createDamagePhotos = state.createDamagePhotos.filter((_, i) => i !== index);
+        refreshCreateDamagePreview();
+      }
+    });
+  }
+
+  document.getElementById('formDamagePhotos').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    for (const file of files) {
+      state.createDamagePhotos.push(await fileToDataUrl(file));
+    }
+    e.target.value = '';
+    refreshCreateDamagePreview();
   });
 
   state.records=await loadRmas();
