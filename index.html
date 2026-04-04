@@ -509,6 +509,8 @@ function renderDetail(){
         <div class="card panel"><div class="section-title" style="margin-bottom:10px;">Completed Work Checklist</div><div class="checklist">${checklistHtml}</div></div>
         <div class="card panel"><div class="section-title" style="margin-bottom:10px;">Notes History</div><textarea id="quickNoteInput" placeholder="Add a quick note..." style="min-height:100px;"></textarea><button id="addNoteBtn" class="primary" style="margin-top:8px; width:100%;">Add Timestamped Note</button><div style="margin:12px 0; border-top:1px solid var(--line);"></div><div class="notes-list">${notesHtml}</div></div>
       </div>
+      <div class="save-bar"><button id="saveDetailBtn" class="primary">Save Changes</button></div>
+
       <div class="footer-meta" style="margin-top:12px;">
         <div>Created: ${selected.createdAt ? new Date(selected.createdAt).toLocaleString() : ''}</div>
         <div>Last Updated: ${selected.updatedAt ? new Date(selected.updatedAt).toLocaleString() : ''}</div>
@@ -562,7 +564,8 @@ function renderDetail(){
     el.addEventListener('change',e => toggleChecklist(Number(e.target.getAttribute('data-check-index'))));
   });
   document.getElementById('addNoteBtn').addEventListener('click', addNoteFromDetail);
-  document.getElementById('saveDetailBtn').addEventListener('click', saveDetailChanges);
+  const saveBtn = document.getElementById('saveDetailBtn');
+  if (saveBtn) saveBtn.addEventListener('click', saveDetailChanges);
 }
 
 function readDetailFormValues(selected){
