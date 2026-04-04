@@ -915,13 +915,35 @@
     }
 
     function updateRecord(id, updater) {
+      let statusChangePayload = null;
+
       state.records = state.records.map((record) => {
         if (record.id !== id) return record;
+        const oldStatus = record.status;
         const updated = typeof updater === 'function' ? updater(record) : { ...record, ...updater };
-        return { ...updated, lastUpdated: new Date().toISOString() };
+        const finalRecord = { ...updated, lastUpdated: new Date().toISOString() };
+
+        if (finalRecord.status && oldStatus !== finalRecord.status) {
+          statusChangePayload = {
+            record: finalRecord,
+            oldStatus,
+            newStatus: finalRecord.status
+          };
+        }
+
+        return finalRecord;
       });
+
       saveData();
       render();
+
+      if (statusChangePayload) {
+        notifyStatusChanged(
+          statusChangePayload.record,
+          statusChangePayload.oldStatus,
+          statusChangePayload.newStatus
+        );
+      }
     }
 
     function toggleChecklist(index) {
@@ -1004,6 +1026,7 @@ renderSelectOptions(document.getElementById('formDeviceType'), deviceOptions, fa
       saveData();
       document.getElementById('rmaDialog').close();
       render();
+      notifyRmaCreated(newRecord);
     }
 
     function escapeHtml(value) {
@@ -1026,6 +1049,83 @@ renderSelectOptions(document.getElementById('formDeviceType'), deviceOptions, fa
         btn.classList.toggle('active', btn.getAttribute('data-tab') === state.tab);
       });
       document.getElementById('statusFilter').value = state.statusFilter;
+    }
+
+
+    const APPS_SCRIPT_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+    const APPS_SCRIPT_TOKEN = 'PASTE_YOUR_SHARED_SECRET_HERE';
+
+    function postToAppsScript(payload) {
+      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE')) {
+        console.warn('Apps Script URL is not configured yet.');
+        return Promise.resolve({ skipped: true });
+      }
+
+      return fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          token: APPS_SCRIPT_TOKEN,
+          ...payload
+        })
+      })
+        .then((res) => res.json().catch(() => ({ ok: res.ok })))
+        .catch((err) => {
+          console.error('Apps Script POST failed:', err);
+          return { ok: false, error: String(err) };
+        });
+    }
+
+    function warrantyFlagsToText(flags) {
+      if (!flags) return '';
+      return Object.entries(flags)
+        .filter(([, value]) => Boolean(value))
+        .map(([key]) => {
+          if (key === 'inWarranty') return 'In Manufacturer Warranty';
+          if (key === 'partsLabor') return 'Parts & Labor';
+          if (key === 'adp') return 'ADP';
+          if (key === 'shipping') return 'Shipping';
+          return key;
+        })
+        .join(', ');
+    }
+
+    function notifyRmaCreated(record) {
+      return postToAppsScript({
+        eventType: 'create_rma',
+        orderNumber: record.orderNumber || '',
+        rmaNumber: record.rmaNumber || '',
+        customerName: record.customerName || '',
+        deviceType: record.deviceType || '',
+        brandModel: record.brandModel || '',
+        serialNumber: record.serialNumber || '',
+        status: record.status || '',
+        reportedIssues: record.reportedIssues || '',
+        possibleIssues: record.possibleIssues || '',
+        warrantyFlags: record.warrantyFlags || {},
+        warrantyText: warrantyFlagsToText(record.warrantyFlags),
+        createdAt: record.createdAt || '',
+        lastUpdated: record.lastUpdated || ''
+      });
+    }
+
+    function notifyStatusChanged(record, oldStatus, newStatus) {
+      if (!oldStatus || !newStatus || oldStatus === newStatus) return Promise.resolve({ skipped: true });
+      return postToAppsScript({
+        eventType: 'status_change',
+        orderNumber: record.orderNumber || '',
+        rmaNumber: record.rmaNumber || '',
+        customerName: record.customerName || '',
+        deviceType: record.deviceType || '',
+        brandModel: record.brandModel || '',
+        serialNumber: record.serialNumber || '',
+        oldStatus,
+        newStatus,
+        status: newStatus,
+        warrantyFlags: record.warrantyFlags || {},
+        warrantyText: warrantyFlagsToText(record.warrantyFlags),
+        lastUpdated: new Date().toISOString()
+      });
     }
 
     function init() {
