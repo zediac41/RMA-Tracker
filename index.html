@@ -81,6 +81,8 @@
     .dialog-inner { padding:16px; }
     .dialog-title { margin:0 0 14px; font-size:20px; }
     .dialog-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; flex-wrap:wrap; }
+    .save-bar { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; flex-wrap:wrap; }
+    .saving { opacity:.7; pointer-events:none; }
     .empty { padding:30px 16px; text-align:center; color:var(--muted); }
     .photo-box { display:flex; flex-direction:column; gap:10px; }
     .photo-preview { display:block; width:100%; max-width:260px; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#dfe5eb; }
@@ -533,6 +535,8 @@ function renderDetail(){
         </div>
       </div>
 
+      <div class="save-bar"><button id="saveDetailBtn" class="primary">Save Changes</button></div>
+
       <div class="footer-meta" style="margin-top:12px;">
         <div>Created: ${selected.createdAt ? new Date(selected.createdAt).toLocaleString() : ''}</div>
         <div>Last Updated: ${selected.updatedAt ? new Date(selected.updatedAt).toLocaleString() : ''}</div>
@@ -550,22 +554,9 @@ function renderDetail(){
   detailWindows.value=selected.windowsEdition;
   detailDeviceType.value=selected.deviceType;
 
-  detailStatus.addEventListener('change',()=>updateSelectedField('status', detailStatus.value));
-  detailWindows.addEventListener('change',()=>updateSelectedField('windowsEdition', detailWindows.value));
-  detailDeviceType.addEventListener('change',()=>updateSelectedField('deviceType', detailDeviceType.value));
+  // Field edits are saved with the Save Changes button instead of live.
 
-  bindDetailInput('detailRmaNumber','rmaNumber',true);
-  bindDetailInput('detailPurchaseDate','purchaseDate');
-  bindDetailInput('detailBrandModel','brandModel');
-  bindDetailInput('detailReportedIssues','reportedIssues');
-  bindDetailInput('detailPossibleIssues','possibleIssues');
-
-  renderWarrantyGrid(document.getElementById('detailWarrantyGrid'), selected.warranty, async (key, value) => {
-    const current = getSelectedRecord();
-    if (!current) return;
-    const saved = await updateRma(current.id, { ...current, warranty:{ ...current.warranty, [key]:value } });
-    if (saved) { state.records = state.records.map(r => r.id === saved.id ? saved : r); render(); }
-  });
+  renderWarrantyGrid(document.getElementById('detailWarrantyGrid'), selected.warranty, () => {});
   const detailPhotoInput = document.getElementById('detailSerialPhoto');
   const detailPhotoWrap = document.getElementById('detailSerialPhotoWrap');
   if (detailPhotoWrap) detailPhotoWrap.classList.toggle('hidden', Boolean(selected.serialPhotoData));
@@ -626,7 +617,86 @@ function renderDetail(){
     el.addEventListener('change',e => toggleChecklist(Number(e.target.getAttribute('data-check-index'))));
   });
   document.getElementById('addNoteBtn').addEventListener('click', addNoteFromDetail);
+  document.getElementById('saveDetailBtn').addEventListener('click', saveDetailChanges);
 }
+
+function readDetailFormValues(selected){
+  const warranty = JSON.parse(JSON.stringify(selected.warranty || createDefaultForm().warranty));
+  document.querySelectorAll('#detailWarrantyGrid .warranty-item').forEach((item, index) => {
+    const key = warrantyOptions[index].key;
+    const checkbox = item.querySelector('input[type="checkbox"]');
+    const select = item.querySelector('select');
+    warranty[key] = {
+      enabled: checkbox ? checkbox.checked : false,
+      years: checkbox && checkbox.checked && select ? (select.value || '') : ''
+    };
+  });
+
+  return {
+    ...selected,
+    status: document.getElementById('detailStatus')?.value || selected.status,
+    windowsEdition: document.getElementById('detailWindows')?.value || selected.windowsEdition,
+    deviceType: document.getElementById('detailDeviceType')?.value || selected.deviceType,
+    rmaNumber: document.getElementById('detailRmaNumber') ? numbersOnly(document.getElementById('detailRmaNumber').value) : selected.rmaNumber,
+    purchaseDate: document.getElementById('detailPurchaseDate')?.value || '',
+    brandModel: document.getElementById('detailBrandModel')?.value?.trim?.() || selected.brandModel,
+    reportedIssues: document.getElementById('detailReportedIssues')?.value?.trim?.() || selected.reportedIssues,
+    possibleIssues: document.getElementById('detailPossibleIssues')?.value?.trim?.() || selected.possibleIssues,
+    warranty
+  };
+}
+
+async function saveDetailChanges(){
+  const selected = getSelectedRecord();
+  if (!selected) return;
+
+  const oldStatus = selected.status;
+  const previousCheckpoint = selected.lastStatusChangeAt || selected.createdAt || '';
+  const updatedRecord = readDetailFormValues(selected);
+
+  if (updatedRecord.status !== selected.status) {
+    const nowIso = new Date().toISOString();
+    updatedRecord.completedAt = updatedRecord.status === 'completed' ? nowIso : null;
+    updatedRecord.lastStatusChangeAt = nowIso;
+  } else {
+    updatedRecord.completedAt = selected.completedAt;
+    updatedRecord.lastStatusChangeAt = selected.lastStatusChangeAt;
+  }
+
+  const btn = document.getElementById('saveDetailBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+  }
+
+  const saved = await updateRma(selected.id, updatedRecord);
+
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+  }
+
+  if (saved) {
+    state.records = state.records.map(r => r.id === saved.id ? saved : r);
+    render();
+
+    if (updatedRecord.status !== oldStatus) {
+      const changedNotes = (saved.notes || []).filter(note => !previousCheckpoint || (note.createdAt && note.createdAt > previousCheckpoint));
+      sendRmaEmail({
+        eventType:'status_change',
+        orderNumber:saved.orderNumber,
+        rmaNumber:saved.rmaNumber,
+        customerName:saved.customerName,
+        oldStatus,
+        newStatus:saved.status,
+        checklist:saved.checklist || [],
+        notes:changedNotes
+      });
+    }
+  }
+}
+
+
 function render(){
   renderRecordList();
   renderDetail();
