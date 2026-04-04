@@ -629,7 +629,19 @@ async function createRecordFromDialog(){
   state.selectedId=created.id;
   document.getElementById('rmaDialog').close();
   render();
-  await sendRmaEmail({ eventType:'create_rma', orderNumber:created.orderNumber, rmaNumber:created.rmaNumber, customerName:created.customerName, status:created.status, reportedIssues:created.reportedIssues, possibleIssues:created.possibleIssues });
+  await sendRmaEmail({
+    eventType:'create_rma',
+    orderNumber:created.orderNumber,
+    rmaNumber:created.rmaNumber,
+    customerName:created.customerName,
+    deviceType:created.deviceType,
+    brandModel:created.brandModel,
+    serialPhotoData:created.serialPhotoData || '',
+    reportedIssues:created.reportedIssues,
+    possibleIssues:created.possibleIssues,
+    checklist:created.checklist || [],
+    notes:created.notes || []
+  });
 }
 
 function openSerialPhotoModal(data){
