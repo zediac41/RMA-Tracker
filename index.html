@@ -630,14 +630,13 @@ async function saveDetailChanges(){
 
     if (updatedRecord.status !== oldStatus) {
       const changedNotes = (saved.notes || []).filter(note => !previousCheckpoint || (note.createdAt && note.createdAt > previousCheckpoint));
+      const changedChecklist = (saved.checklist || []).filter(item => item?.done && item?.completedAt && (!previousCheckpoint || item.completedAt > previousCheckpoint));
       sendRmaEmail({
         eventType:'status_change',
-        orderNumber:saved.orderNumber,
         rmaNumber:saved.rmaNumber,
-        customerName:saved.customerName,
         oldStatus,
         newStatus:saved.status,
-        checklist:saved.checklist || [],
+        checklist:changedChecklist,
         notes:changedNotes
       });
     }
