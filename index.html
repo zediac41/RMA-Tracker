@@ -70,6 +70,15 @@
     .photo-preview { display:block; width:100%; max-width:260px; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#dfe5eb; }
     .photo-preview img { display:block; width:100%; height:auto; }
     .photo-link { text-decoration:none; color:var(--blue); font-size:12px; }
+    .serial-photo-btn {
+      border:2px solid #7d8998 !important;
+      background:#dfe5eb !important;
+      color:var(--text) !important;
+      font-size:12px;
+      font-weight:600;
+    }
+    .serial-photo-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
     
     .image-modal {
       display:none; position:fixed; inset:0; background:rgba(15,23,42,.7); z-index:1000;
@@ -146,7 +155,7 @@
     </div>
 
     <div class="field-full" style="margin-top:12px;">
-      <label>Serial Number Photo</label>
+      <label>Serial Number</label>
       <div class="photo-box">
         <input id="formSerialPhoto" type="file" accept="image/*" />
         <div id="formSerialPhotoPreview" class="small muted">No image selected.</div>
@@ -313,16 +322,34 @@ async function fileToDataUrl(file){
     reader.readAsDataURL(file);
   });
 }
-function renderPhotoPreview(containerId, data){
+function renderPhotoPreview(containerId, data, options = {}){
   const el = document.getElementById(containerId);
+  const {
+    viewButtonId = 'viewSerialPhotoBtn',
+    deleteButtonId = 'deleteSerialPhotoBtn',
+    onDelete = null
+  } = options;
+
   if (!data) {
-    el.innerHTML = '<span class="small muted">No image selected.</span>';
+    el.innerHTML = '<span class="small muted">No photo selected.</span>';
     return;
   }
-  el.innerHTML = '<button type="button" id="viewSerialPhotoBtn">View serial number photo</button>';
-  const btn = document.getElementById('viewSerialPhotoBtn');
-  if (btn) {
-    btn.addEventListener('click', () => openSerialPhotoModal(data));
+
+  el.innerHTML = `
+    <div class="serial-photo-actions">
+      <button type="button" id="${viewButtonId}" class="serial-photo-btn">View serial number</button>
+      <button type="button" id="${deleteButtonId}">Delete photo</button>
+    </div>
+  `;
+
+  const viewBtn = document.getElementById(viewButtonId);
+  if (viewBtn) {
+    viewBtn.addEventListener('click', () => openSerialPhotoModal(data));
+  }
+
+  const deleteBtn = document.getElementById(deleteButtonId);
+  if (deleteBtn && onDelete) {
+    deleteBtn.addEventListener('click', onDelete);
   }
 }
 async function sendRmaEmail(payload){
@@ -423,7 +450,7 @@ function renderDetail(){
       </div>
 
       <div class="field-full" style="margin-top:12px;">
-        <label>Serial Number Photo</label>
+        <label>Serial Number</label>
         <div class="photo-box">
           <input id="detailSerialPhoto" type="file" accept="image/*" />
           <div id="detailSerialPhotoPreview"></div>
@@ -473,7 +500,20 @@ function renderDetail(){
     const saved = await updateRma(current.id, { ...current, warranty:{ ...current.warranty, [key]:value } });
     if (saved) { state.records = state.records.map(r => r.id === saved.id ? saved : r); render(); }
   });
-  renderPhotoPreview('detailSerialPhotoPreview', selected.serialPhotoData);
+  const detailPhotoInput = document.getElementById('detailSerialPhoto');
+  detailPhotoInput.disabled = Boolean(selected.serialPhotoData);
+  renderPhotoPreview('detailSerialPhotoPreview', selected.serialPhotoData, {
+    viewButtonId: 'detailViewSerialPhotoBtn',
+    deleteButtonId: 'detailDeleteSerialPhotoBtn',
+    onDelete: async () => {
+      const current = getSelectedRecord();
+      const saved = await updateRma(current.id, { ...current, serialPhotoData:'' });
+      if (saved) {
+        state.records = state.records.map(r => r.id === saved.id ? saved : r);
+        render();
+      }
+    }
+  });
 
   document.getElementById('detailSerialPhoto').addEventListener('change', async (e) => {
     const file = e.target.files?.[0];
@@ -481,7 +521,10 @@ function renderDetail(){
     const dataUrl = await fileToDataUrl(file);
     const current = getSelectedRecord();
     const saved = await updateRma(current.id, { ...current, serialPhotoData:dataUrl });
-    if (saved) { state.records = state.records.map(r => r.id === saved.id ? saved : r); render(); }
+    if (saved) {
+      state.records = state.records.map(r => r.id === saved.id ? saved : r);
+      render();
+    }
   });
 
   document.querySelectorAll('[data-check-index]').forEach(el => {
@@ -545,6 +588,7 @@ function populateCreateForm(){
   renderPhotoPreview('formSerialPhotoPreview', '');
   state.createSerialPhotoData = '';
   document.getElementById('formSerialPhoto').value = '';
+  document.getElementById('formSerialPhoto').disabled = false;
 }
 function readWarrantyGrid(containerId){
   const result = createDefaultForm().warranty;
@@ -623,7 +667,19 @@ async function init(){
     const file = e.target.files?.[0];
     if (!file) return;
     state.createSerialPhotoData = await fileToDataUrl(file);
-    renderPhotoPreview('formSerialPhotoPreview', state.createSerialPhotoData);
+    e.target.value = '';
+    e.target.disabled = true;
+    renderPhotoPreview('formSerialPhotoPreview', state.createSerialPhotoData, {
+      viewButtonId: 'createViewSerialPhotoBtn',
+      deleteButtonId: 'createDeleteSerialPhotoBtn',
+      onDelete: () => {
+        state.createSerialPhotoData = '';
+        const input = document.getElementById('formSerialPhoto');
+        input.disabled = false;
+        input.value = '';
+        renderPhotoPreview('formSerialPhotoPreview', '');
+      }
+    });
   });
 
   state.records=await loadRmas();
