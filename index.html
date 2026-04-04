@@ -1056,7 +1056,7 @@ renderSelectOptions(document.getElementById('formDeviceType'), deviceOptions, fa
     const APPS_SCRIPT_TOKEN = 'XOTICPCRMAS';
 
     function postToAppsScript(payload) {
-      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('https://script.google.com/macros/s/AKfycbyZa7Z7FCpeKfviz7DtkxP7ty_S2PKm7YiGyQ2c_XGR3Y8yuR7a_zq8xHf1opeuinLzIw/exec')) {
+      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE')) {
         console.warn('Apps Script URL is not configured yet.');
         return Promise.resolve({ skipped: true });
       }
