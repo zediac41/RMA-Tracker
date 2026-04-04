@@ -254,7 +254,8 @@ function mapRowToRecord(row){
     notes:Array.isArray(row.notes_json) ? row.notes_json : [],
     createdAt:row.created_at || '',
     updatedAt:row.updated_at || '',
-    completedAt:row.completed_at || null
+    completedAt:row.completed_at || null,
+    lastStatusChangeAt:row.last_status_change_at || row.created_at || ''
   };
 }
 function mapRecordToRow(record){
@@ -273,6 +274,7 @@ function mapRecordToRow(record){
     checklist_json:record.checklist,
     notes_json:record.notes,
     completed_at:record.completedAt,
+    last_status_change_at:record.lastStatusChangeAt || null,
     ...warrantyToRow(record.warranty)
   };
 }
@@ -420,7 +422,7 @@ function renderDetail(){
   const detail=document.getElementById('detailView'); const selected=getSelectedRecord();
   if (!selected) { detail.innerHTML='<div class="card empty">Select or create an RMA.</div>'; return; }
 
-  const checklistHtml=selected.checklist.map((item,index)=>`<label class="check-item ${item.done ? 'done' : ''}"><input type="checkbox" data-check-index="${index}" ${item.done ? 'checked' : ''} /><span>${escapeHtml(item.label)}</span></label>${item.completedAt ? `<div class="muted tiny" style="margin:-4px 0 4px 30px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Completed ${new Date(item.completedAt).toLocaleString()}</div>` : ''}`).join('');
+  const checklistHtml=selected.checklist.map((item,index)=>`<label class="check-item ${item.done ? 'done' : ''}"><input type="checkbox" data-check-index="${index}" ${item.done ? 'checked' : ''} /><span>${escapeHtml(item.label)}</span></label>`).join('');
   const notesHtml=selected.notes.length ? selected.notes.map(note=>`<div class="note-box"><div class="small">${escapeHtml(note.text)}</div><div class="muted tiny" style="margin-top:8px;">${new Date(note.createdAt).toLocaleString()}</div></div>`).join('') : '<div class="muted small">No notes added yet.</div>';
 
   detail.innerHTML = `
@@ -548,14 +550,29 @@ function bindDetailInput(id, field, numeric=false){
 async function updateSelectedField(field, value){
   const selected=getSelectedRecord(); if(!selected) return;
   const oldStatus=selected.status;
+  const previousCheckpoint = selected.lastStatusChangeAt || selected.createdAt || '';
   const updatedRecord={...selected,[field]:value};
-  if(field==='status') updatedRecord.completedAt=value==='completed' ? new Date().toISOString() : null;
+  if(field==='status') {
+    const nowIso = new Date().toISOString();
+    updatedRecord.completedAt = value==='completed' ? nowIso : null;
+    updatedRecord.lastStatusChangeAt = nowIso;
+  }
   const saved=await updateRma(selected.id,updatedRecord);
   if(saved){
     state.records=state.records.map(r=>r.id===saved.id?saved:r);
     render();
     if(field==='status' && oldStatus!==saved.status){
-      await sendRmaEmail({ eventType:'status_change', orderNumber:saved.orderNumber, rmaNumber:saved.rmaNumber, customerName:saved.customerName, oldStatus, newStatus:saved.status });
+      const changedNotes = (saved.notes || []).filter(note => !previousCheckpoint || (note.createdAt && note.createdAt > previousCheckpoint));
+      await sendRmaEmail({
+        eventType:'status_change',
+        orderNumber:saved.orderNumber,
+        rmaNumber:saved.rmaNumber,
+        customerName:saved.customerName,
+        oldStatus,
+        newStatus:saved.status,
+        checklist:saved.checklist || [],
+        notes:changedNotes
+      });
     }
   }
 }
@@ -623,7 +640,7 @@ function readCreateForm(){
 async function createRecordFromDialog(){
   const form=readCreateForm(); if(!form.orderNumber || !form.customerName) return;
   const now=new Date().toISOString();
-  const record={ ...form, checklist:defaultChecklist.map(item=>({ label:item, done:false, completedAt:null })), notes:[], createdAt:now, updatedAt:now, completedAt:form.status==='completed'?now:null };
+  const record={ ...form, checklist:defaultChecklist.map(item=>({ label:item, done:false, completedAt:null })), notes:[], createdAt:now, updatedAt:now, completedAt:form.status==='completed'?now:null, lastStatusChangeAt:now };
   const created=await createRma(record); if(!created) return;
   state.records=[created,...state.records];
   state.selectedId=created.id;
@@ -638,9 +655,7 @@ async function createRecordFromDialog(){
     brandModel:created.brandModel,
     serialPhotoData:created.serialPhotoData || '',
     reportedIssues:created.reportedIssues,
-    possibleIssues:created.possibleIssues,
-    checklist:created.checklist || [],
-    notes:created.notes || []
+    possibleIssues:created.possibleIssues
   });
 }
 
