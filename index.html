@@ -798,15 +798,45 @@ function readCreateForm(){
   };
 }
 async function createRecordFromDialog(){
-  const form=readCreateForm(); if(!form.orderNumber || !form.customerName) return;
-  const now=new Date().toISOString();
-  const record={ ...form, checklist:defaultChecklist.map(item=>({ label:item, done:false, completedAt:null })), notes:[], createdAt:now, updatedAt:now, completedAt:form.status==='completed'?now:null, lastStatusChangeAt:now };
-  const created=await createRma(record); if(!created) return;
-  state.records=[created,...state.records];
-  state.selectedId=created.id;
+  const form = readCreateForm();
+  if (!form.orderNumber || !form.customerName) return;
+
+  const btn = document.getElementById('createDialogBtn');
+  const dialog = document.getElementById('rmaDialog');
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Creating...';
+  }
+  if (dialog) dialog.classList.add('saving');
+
+  const now = new Date().toISOString();
+  const record = {
+    ...form,
+    checklist: defaultChecklist.map(item => ({ label:item, done:false, completedAt:null })),
+    notes: [],
+    createdAt: now,
+    updatedAt: now,
+    completedAt: form.status === 'completed' ? now : null,
+    lastStatusChangeAt: now
+  };
+
+  const created = await createRma(record);
+
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = 'Create RMA';
+  }
+  if (dialog) dialog.classList.remove('saving');
+
+  if (!created) return;
+
+  state.records = [created, ...state.records];
+  state.selectedId = created.id;
   document.getElementById('rmaDialog').close();
   render();
-  await sendRmaEmail({
+
+  sendRmaEmail({
     eventType:'create_rma',
     orderNumber:created.orderNumber,
     rmaNumber:created.rmaNumber,
