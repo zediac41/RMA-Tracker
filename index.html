@@ -96,9 +96,9 @@
     <h2 class="dialog-title">Create RMA Record</h2>
     <div class="grid-2">
       <div class="field"><label>Order Number</label><input id="formOrderNumber" inputmode="numeric" pattern="[0-9]*" /></div>
-      <div class="field"><label>RMA Number</label><input id="formRmaNumber" inputmode="numeric" pattern="[0-9]*" /></div>
       <div class="field"><label>Customer Name</label><input id="formCustomerName" /></div>
       <div class="field"><label>Device Type</label><select id="formDeviceType"></select></div>
+      <div class="field"><label>RMA Number</label><input id="formRmaNumber" inputmode="numeric" pattern="[0-9]*" /></div>
       <div class="field"><label>Status</label><select id="formStatus"></select></div>
       <div class="field"><label>Brand / Model</label><input id="formBrandModel" /></div>
       <div class="field"><label>Serial Number</label><input id="formSerialNumber" /></div>
@@ -107,6 +107,9 @@
     <div style="margin-top:12px;">
       <div class="section-title">Warranty</div>
       <div class="warranty-grid" id="formWarrantyFlags"></div>
+      <div class="grid-2" style="margin-top:10px;">
+        <div class="field"><label>Purchase Date</label><input id="formPurchaseDate" type="date" placeholder="2/22/2025" /></div>
+      </div>
     </div>
     <div class="field-full" style="margin-top:12px;"><label>Reported Issues</label><textarea id="formReportedIssues"></textarea></div>
     <div class="field-full" style="margin-top:12px;"><label>Possible Issues / Observations</label><textarea id="formPossibleIssues"></textarea></div>
@@ -150,7 +153,7 @@ const numbersOnly = (v) => String(v ?? '').replace(/\D+/g,'');
 const statusLabel = (s) => statusOptions.find(x => x.value === s)?.label || s;
 const deviceLabel = (t) => t === 'laptop' ? 'Laptop' : t === 'other' ? 'Other' : 'Desktop';
 const createDefaultWarrantyFlags = () => ({ shipping:false, inWarranty:false, adp:false, partsLabor:false });
-const createDefaultForm = () => ({ orderNumber:'', rmaNumber:'', customerName:'', deviceType:'desktop', brandModel:'', serialNumber:'', warrantyFlags:createDefaultWarrantyFlags(), windowsEdition:'home', status:'diagnosing', reportedIssues:'', possibleIssues:'' });
+const createDefaultForm = () => ({ orderNumber:'', rmaNumber:'', customerName:'', deviceType:'desktop', purchaseDate:'', brandModel:'', serialNumber:'', warrantyFlags:createDefaultWarrantyFlags(), windowsEdition:'home', status:'diagnosing', reportedIssues:'', possibleIssues:'' });
 const escapeHtml = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const escapeAttr = (v) => escapeHtml(v).replace(/`/g,'&#96;');
 
@@ -159,7 +162,7 @@ function warrantyFlagsToRow(flags){ return { in_manufacturer_warranty:Boolean(fl
 function mapRowToRecord(row){
   return {
     id:row.id, orderNumber:row.order_number || '', rmaNumber:row.rma_number || '', customerName:row.customer_name || '',
-    deviceType:row.device_type || 'desktop', brandModel:row.brand_model || '', serialNumber:row.serial_number || '',
+    deviceType:row.device_type || 'desktop', purchaseDate:row.purchase_date || '', brandModel:row.brand_model || '', serialNumber:row.serial_number || '',
     warrantyFlags:warrantyFlagsFromRow(row), windowsEdition:row.windows_edition || 'home', status:row.status || 'diagnosing',
     reportedIssues:row.reported_issues || '', possibleIssues:row.possible_issues || '',
     checklist:Array.isArray(row.checklist_json) ? row.checklist_json : defaultChecklist.map(label => ({ label, done:false, completedAt:null })),
@@ -168,7 +171,7 @@ function mapRowToRecord(row){
 }
 function mapRecordToRow(record){
   return {
-    order_number:record.orderNumber, rma_number:record.rmaNumber, customer_name:record.customerName, device_type:record.deviceType,
+    order_number:record.orderNumber, rma_number:record.rmaNumber, customer_name:record.customerName, device_type:record.deviceType, purchase_date:record.purchaseDate,
     brand_model:record.brandModel, serial_number:record.serialNumber, windows_edition:record.windowsEdition, status:record.status,
     reported_issues:record.reportedIssues, possible_issues:record.possibleIssues, checklist_json:record.checklist, notes_json:record.notes,
     completed_at:record.completedAt, ...warrantyFlagsToRow(record.warrantyFlags)
@@ -274,10 +277,10 @@ function renderDetail(){
         <div class="field"><label>Status</label><select id="detailStatus"></select></div>
         <div class="field"><label>Windows</label><select id="detailWindows"></select></div>
         <div class="field"><label>Device Type</label><select id="detailDeviceType"></select></div>
+        <div class="field"><label>RMA Number</label><input id="detailRmaNumberTop" inputmode="numeric" pattern="[0-9]*" value="${escapeAttr(selected.rmaNumber || '')}" /></div>
       </div>
-      <div style="margin-top:12px;"><div class="section-title">Warranty</div><div class="warranty-grid" id="detailWarrantyGrid">${warrantyHtml}</div></div>
+      <div style="margin-top:12px;"><div class="section-title">Warranty</div><div class="warranty-grid" id="detailWarrantyGrid">${warrantyHtml}</div><div class="grid-2" style="margin-top:10px;"><div class="field"><label>Purchase Date</label><input id="detailPurchaseDate" type="date" value="${escapeAttr(selected.purchaseDate || '')}" /></div></div></div>
       <div class="grid-2" style="margin-top:12px;">
-        <div class="field"><label>RMA Number</label><input id="detailRmaNumber" value="${escapeAttr(selected.rmaNumber || '')}" /></div>
         <div class="field"><label>Brand / Model</label><input id="detailBrandModel" value="${escapeAttr(selected.brandModel)}" /></div>
         <div class="field"><label>Serial Number</label><input id="detailSerialNumber" value="${escapeAttr(selected.serialNumber)}" /></div>
       </div>
@@ -310,7 +313,8 @@ function renderDetail(){
   detailWindows.addEventListener('change',()=>updateSelectedField('windowsEdition', detailWindows.value));
   detailDeviceType.addEventListener('change',()=>updateSelectedField('deviceType', detailDeviceType.value));
 
-  bindDetailInput('detailRmaNumber','rmaNumber',true);
+  bindDetailInput('detailRmaNumberTop','rmaNumber',true);
+  bindDetailInput('detailPurchaseDate','purchaseDate');
   bindDetailInput('detailBrandModel','brandModel');
   bindDetailInput('detailSerialNumber','serialNumber');
   bindDetailInput('detailReportedIssues','reportedIssues');
@@ -368,6 +372,7 @@ function populateCreateForm(){
   document.getElementById('formOrderNumber').value=form.orderNumber;
   document.getElementById('formRmaNumber').value=form.rmaNumber;
   document.getElementById('formCustomerName').value=form.customerName;
+  document.getElementById('formPurchaseDate').value=form.purchaseDate;
   document.getElementById('formBrandModel').value=form.brandModel;
   document.getElementById('formSerialNumber').value=form.serialNumber;
   document.getElementById('formReportedIssues').value=form.reportedIssues;
@@ -388,6 +393,7 @@ function readCreateForm(){
     rmaNumber:numbersOnly(document.getElementById('formRmaNumber').value.trim()),
     customerName:document.getElementById('formCustomerName').value.trim(),
     deviceType:document.getElementById('formDeviceType').value,
+    purchaseDate:document.getElementById('formPurchaseDate').value,
     brandModel:document.getElementById('formBrandModel').value.trim(),
     serialNumber:document.getElementById('formSerialNumber').value.trim(),
     warrantyFlags,
