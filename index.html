@@ -38,6 +38,7 @@
     .badge { padding:5px 10px; border-radius:999px; border:1px solid var(--line); font-size:12px; max-width:140px; text-align:center; }
     .muted { color:var(--muted); }
     .small { font-size:12px; line-height:1.35; }
+    .summary-small { font-size:11px !important; }
     .tiny { font-size:11px; line-height:1.35; }
     .grid-4,.grid-2,.grid-3 { display:grid; gap:10px; }
     .grid-4 { grid-template-columns:repeat(4,minmax(0,1fr)); }
@@ -295,7 +296,7 @@ function renderPhotoPreview(containerId, data){
     el.innerHTML = '<span class="small muted">No image selected.</span>';
     return;
   }
-  el.innerHTML = `<a class="photo-preview" href="${data}" target="_blank" rel="noopener"><img src="${data}" alt="Serial number photo" /></a><a class="photo-link" href="${data}" target="_blank" rel="noopener">Open full image</a>`;
+  el.innerHTML = `<a class="photo-link" href="${data}" target="_blank" rel="noopener">View serial number photo</a>`;
 }
 async function sendRmaEmail(payload){
   const { error } = await supabase.functions.invoke('send-rma-email', { body: payload });
@@ -386,7 +387,7 @@ function renderDetail(){
       <div class="grid-3" style="margin-top:12px;">
         <div class="field"><label>Purchase Date</label><input id="detailPurchaseDate" type="date" value="${escapeAttr(selected.purchaseDate || '')}" /></div>
         <div class="field"><label>Brand / Model</label><input id="detailBrandModel" value="${escapeAttr(selected.brandModel)}" /></div>
-        <div class="field"><label>Warranty Summary</label><input value="${escapeAttr(warrantySummary(selected.warranty))}" readonly /></div>
+        <div class="field"><label>Warranty Summary</label><input style="font-size:11px;" value="${escapeAttr(warrantySummary(selected.warranty))}" readonly /></div>
       </div>
 
       <div style="margin-top:12px;">
