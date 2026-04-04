@@ -39,14 +39,21 @@
     .muted { color:var(--muted); }
     .small { font-size:12px; line-height:1.35; }
     .tiny { font-size:11px; line-height:1.35; }
-    .grid-4,.grid-2 { display:grid; gap:10px; }
+    .grid-4,.grid-2,.grid-3 { display:grid; gap:10px; }
     .grid-4 { grid-template-columns:repeat(4,minmax(0,1fr)); }
+    .grid-3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
     .grid-2 { grid-template-columns:repeat(2,minmax(0,1fr)); }
     .field,.field-full { display:flex; flex-direction:column; gap:6px; }
     .field label,.section-title { font-size:12px; color:var(--muted); font-weight:700; }
-    .warranty-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
-    .warranty-item,.check-item { display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:10px; padding:8px 10px; background:#e9edf1; font-size:11px; }
-    .warranty-item span,.check-item span { flex:1 1 auto; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .warranty-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    .warranty-item {
+      display:grid; grid-template-columns:auto 1fr 90px; align-items:center; gap:8px;
+      border:1px solid var(--line); border-radius:10px; padding:8px 10px; background:#e9edf1; font-size:11px;
+    }
+    .warranty-item span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .warranty-item select { padding:6px 8px; border-radius:8px; }
+    .check-item { display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:10px; padding:8px 10px; background:#e9edf1; font-size:11px; }
+    .check-item span { flex:1 1 auto; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .two-column { display:grid; grid-template-columns:1.2fr .8fr; gap:12px; }
     .checklist,.notes-list { display:flex; flex-direction:column; gap:8px; }
     .check-item.done span { text-decoration:line-through; color:#94a3b8; }
@@ -58,9 +65,13 @@
     .dialog-title { margin:0 0 14px; font-size:20px; }
     .dialog-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; flex-wrap:wrap; }
     .empty { padding:30px 16px; text-align:center; color:var(--muted); }
+    .photo-box { display:flex; flex-direction:column; gap:10px; }
+    .photo-preview { display:block; width:100%; max-width:260px; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#dfe5eb; }
+    .photo-preview img { display:block; width:100%; height:auto; }
+    .photo-link { text-decoration:none; color:var(--blue); font-size:12px; }
     @media (max-width:1100px){ .layout,.two-column{grid-template-columns:1fr}.grid-4{grid-template-columns:repeat(2,minmax(0,1fr))} }
-    @media (max-width:700px){ .grid-4,.grid-2,.warranty-grid,.footer-meta{grid-template-columns:1fr 1fr}.topbar{flex-direction:column;align-items:stretch} }
-    @media (max-width:520px){ .grid-4,.grid-2,.warranty-grid,.footer-meta,.tabs{grid-template-columns:1fr} button.primary{width:100%} }
+    @media (max-width:700px){ .grid-4,.grid-2,.grid-3,.warranty-grid,.footer-meta{grid-template-columns:1fr 1fr}.topbar{flex-direction:column;align-items:stretch} }
+    @media (max-width:520px){ .grid-4,.grid-2,.grid-3,.warranty-grid,.footer-meta,.tabs{grid-template-columns:1fr} button.primary{width:100%} .warranty-item{grid-template-columns:auto 1fr} .warranty-item select{grid-column:1 / -1;} }
   </style>
 </head>
 <body>
@@ -77,7 +88,7 @@
   <div class="layout">
     <div>
       <div class="card panel filters">
-        <input id="searchInput" type="text" placeholder="Search order, customer, serial..." />
+        <input id="searchInput" type="text" placeholder="Search order, customer..." />
         <div class="tabs">
           <button data-tab="active" class="tab-btn active">Active</button>
           <button data-tab="completed" class="tab-btn">Completed</button>
@@ -94,23 +105,30 @@
 <dialog id="rmaDialog">
   <div class="dialog-inner">
     <h2 class="dialog-title">Create RMA Record</h2>
-    <div class="grid-2">
+    <div class="grid-4">
       <div class="field"><label>Order Number</label><input id="formOrderNumber" inputmode="numeric" pattern="[0-9]*" /></div>
       <div class="field"><label>Customer Name</label><input id="formCustomerName" /></div>
       <div class="field"><label>Device Type</label><select id="formDeviceType"></select></div>
       <div class="field"><label>RMA Number</label><input id="formRmaNumber" inputmode="numeric" pattern="[0-9]*" /></div>
       <div class="field"><label>Status</label><select id="formStatus"></select></div>
+      <div class="field"><label>Purchase Date</label><input id="formPurchaseDate" type="date" /></div>
       <div class="field"><label>Brand / Model</label><input id="formBrandModel" /></div>
-      <div class="field"><label>Serial Number</label><input id="formSerialNumber" /></div>
       <div class="field"><label>Windows</label><select id="formWindows"></select></div>
     </div>
+
     <div style="margin-top:12px;">
       <div class="section-title">Warranty</div>
-      <div class="warranty-grid" id="formWarrantyFlags"></div>
-      <div class="grid-2" style="margin-top:10px;">
-        <div class="field"><label>Purchase Date</label><input id="formPurchaseDate" type="date" placeholder="2/22/2025" /></div>
+      <div class="warranty-grid" id="formWarrantyGrid"></div>
+    </div>
+
+    <div class="field-full" style="margin-top:12px;">
+      <label>Serial Number Photo</label>
+      <div class="photo-box">
+        <input id="formSerialPhoto" type="file" accept="image/*" />
+        <div id="formSerialPhotoPreview" class="small muted">No image selected.</div>
       </div>
     </div>
+
     <div class="field-full" style="margin-top:12px;"><label>Reported Issues</label><textarea id="formReportedIssues"></textarea></div>
     <div class="field-full" style="margin-top:12px;"><label>Possible Issues / Observations</label><textarea id="formPossibleIssues"></textarea></div>
     <div class="dialog-actions">
@@ -127,12 +145,12 @@ const SUPABASE_URL = 'https://kcdhkjjebgwxozgwjfnm.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_6p3LaQ8Pkmm7UL00i9GMdA_r9wc_KRX';
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-const defaultChecklist = ['Visual inspection completed','Boot test completed','Temps checked','RAM tested','Drive tested','Windows & drivers updated','BIOS updated','OCCT / Burn-in Completed','OS reinstalled','Manufacturer contacted','Sent to manufacturer','Passed QA'];
+const defaultChecklist = ['Visual inspection completed','Boot test completed','Temps checked','RAM tested','Drive tested','Windows & drivers updated','BIOS updated','OCCT / Burn-in Completed','OS reinstalled','Manufacturer contacted','Need Manufacturer Repair','Passed QA'];
 const statusOptions = [
   { value:'diagnosing', label:'Diagnosing' },
   { value:'waiting_parts', label:'Waiting on Parts' },
   { value:'waiting_customer', label:'Waiting on Customer' },
-  { value:'sent_manufacturer', label:'Sent to Manufacturer' },
+  { value:'need_manufacturer_repair', label:'Need Manufacturer Repair' },
   { value:'repair_progress', label:'Repair/Testing' },
   { value:'pay_shipping', label:'Pay for Shipping' },
   { value:'completed', label:'Completed' }
@@ -145,73 +163,167 @@ const warrantyOptions = [
   { key:'partsLabor', label:'Parts & Labor' },
   { key:'shipping', label:'Shipping' }
 ];
-const state = { records:[], selectedId:null, search:'', tab:'active', statusFilter:'all' };
+const state = { records:[], selectedId:null, search:'', tab:'active', statusFilter:'all', createSerialPhotoData:'' };
 
 const showBanner = (m,v='info') => { const el=document.getElementById('statusBanner'); el.textContent=m; el.className=`banner ${v}`; };
 const clearBanner = () => { const el=document.getElementById('statusBanner'); el.textContent=''; el.className='banner'; };
 const numbersOnly = (v) => String(v ?? '').replace(/\D+/g,'');
 const statusLabel = (s) => statusOptions.find(x => x.value === s)?.label || s;
 const deviceLabel = (t) => t === 'laptop' ? 'Laptop' : t === 'other' ? 'Other' : 'Desktop';
-const createDefaultWarrantyFlags = () => ({ shipping:false, inWarranty:false, adp:false, partsLabor:false });
-const createDefaultForm = () => ({ orderNumber:'', rmaNumber:'', customerName:'', deviceType:'desktop', purchaseDate:'', brandModel:'', serialNumber:'', warrantyFlags:createDefaultWarrantyFlags(), windowsEdition:'home', status:'diagnosing', reportedIssues:'', possibleIssues:'' });
+const createDefaultForm = () => ({
+  orderNumber:'', rmaNumber:'', customerName:'', deviceType:'desktop', purchaseDate:'', brandModel:'',
+  warranty:{ inWarranty:{ enabled:false, years:'' }, adp:{ enabled:false, years:'' }, partsLabor:{ enabled:false, years:'' }, shipping:{ enabled:false, years:'' } },
+  windowsEdition:'home', status:'diagnosing', reportedIssues:'', possibleIssues:'', serialPhotoData:''
+});
 const escapeHtml = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const escapeAttr = (v) => escapeHtml(v).replace(/`/g,'&#96;');
 
-function warrantyFlagsFromRow(row){ return { inWarranty:Boolean(row.in_manufacturer_warranty), adp:Boolean(row.adp), partsLabor:Boolean(row.parts_labor), shipping:Boolean(row.shipping) }; }
-function warrantyFlagsToRow(flags){ return { in_manufacturer_warranty:Boolean(flags.inWarranty), adp:Boolean(flags.adp), parts_labor:Boolean(flags.partsLabor), shipping:Boolean(flags.shipping) }; }
+function warrantyFromRow(row){
+  const years = row.warranty_years_json || {};
+  return {
+    inWarranty:{ enabled:Boolean(row.in_manufacturer_warranty), years:years.inWarranty || '' },
+    adp:{ enabled:Boolean(row.adp), years:years.adp || '' },
+    partsLabor:{ enabled:Boolean(row.parts_labor), years:years.partsLabor || '' },
+    shipping:{ enabled:Boolean(row.shipping), years:years.shipping || '' }
+  };
+}
+function warrantyToRow(warranty){
+  return {
+    in_manufacturer_warranty:Boolean(warranty.inWarranty?.enabled),
+    adp:Boolean(warranty.adp?.enabled),
+    parts_labor:Boolean(warranty.partsLabor?.enabled),
+    shipping:Boolean(warranty.shipping?.enabled),
+    warranty_years_json:{
+      inWarranty:warranty.inWarranty?.years || '',
+      adp:warranty.adp?.years || '',
+      partsLabor:warranty.partsLabor?.years || '',
+      shipping:warranty.shipping?.years || ''
+    }
+  };
+}
 function mapRowToRecord(row){
   return {
-    id:row.id, orderNumber:row.order_number || '', rmaNumber:row.rma_number || '', customerName:row.customer_name || '',
-    deviceType:row.device_type || 'desktop', purchaseDate:row.purchase_date || '', brandModel:row.brand_model || '', serialNumber:row.serial_number || '',
-    warrantyFlags:warrantyFlagsFromRow(row), windowsEdition:row.windows_edition || 'home', status:row.status || 'diagnosing',
-    reportedIssues:row.reported_issues || '', possibleIssues:row.possible_issues || '',
+    id:row.id,
+    orderNumber:row.order_number || '',
+    rmaNumber:row.rma_number || '',
+    customerName:row.customer_name || '',
+    deviceType:row.device_type || 'desktop',
+    purchaseDate:row.purchase_date || '',
+    brandModel:row.brand_model || '',
+    serialPhotoData:row.serial_photo_data || '',
+    warranty:warrantyFromRow(row),
+    windowsEdition:row.windows_edition || 'home',
+    status:row.status || 'diagnosing',
+    reportedIssues:row.reported_issues || '',
+    possibleIssues:row.possible_issues || '',
     checklist:Array.isArray(row.checklist_json) ? row.checklist_json : defaultChecklist.map(label => ({ label, done:false, completedAt:null })),
-    notes:Array.isArray(row.notes_json) ? row.notes_json : [], createdAt:row.created_at || '', updatedAt:row.updated_at || '', completedAt:row.completed_at || null
+    notes:Array.isArray(row.notes_json) ? row.notes_json : [],
+    createdAt:row.created_at || '',
+    updatedAt:row.updated_at || '',
+    completedAt:row.completed_at || null
   };
 }
 function mapRecordToRow(record){
   return {
-    order_number:record.orderNumber, rma_number:record.rmaNumber, customer_name:record.customerName, device_type:record.deviceType, purchase_date:record.purchaseDate,
-    brand_model:record.brandModel, serial_number:record.serialNumber, windows_edition:record.windowsEdition, status:record.status,
-    reported_issues:record.reportedIssues, possible_issues:record.possibleIssues, checklist_json:record.checklist, notes_json:record.notes,
-    completed_at:record.completedAt, ...warrantyFlagsToRow(record.warrantyFlags)
+    order_number:record.orderNumber,
+    rma_number:record.rmaNumber,
+    customer_name:record.customerName,
+    device_type:record.deviceType,
+    purchase_date:record.purchaseDate || null,
+    brand_model:record.brandModel,
+    serial_photo_data:record.serialPhotoData || '',
+    windows_edition:record.windowsEdition,
+    status:record.status,
+    reported_issues:record.reportedIssues,
+    possible_issues:record.possibleIssues,
+    checklist_json:record.checklist,
+    notes_json:record.notes,
+    completed_at:record.completedAt,
+    ...warrantyToRow(record.warranty)
   };
 }
+function warrantySummary(w){
+  return warrantyOptions.map(opt => {
+    const item = w[opt.key];
+    if (!item?.enabled) return null;
+    return `${opt.label}${item.years ? ' - ' + item.years + ' yr' : ''}`;
+  }).filter(Boolean).join(', ');
+}
+function renderWarrantyGrid(container, warranty, onChange){
+  container.innerHTML = '';
+  warrantyOptions.forEach(opt => {
+    const item = warranty[opt.key] || { enabled:false, years:'' };
+    const label = document.createElement('label');
+    label.className = 'warranty-item';
 
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = Boolean(item.enabled);
+
+    const span = document.createElement('span');
+    span.textContent = opt.label;
+
+    const select = document.createElement('select');
+    select.innerHTML = '<option value="">Years</option><option value="1">1 yr</option><option value="2">2 yr</option><option value="3">3 yr</option><option value="4">4 yr</option><option value="5">5 yr</option>';
+    select.value = item.years || '';
+    select.disabled = !item.enabled;
+
+    checkbox.addEventListener('change', () => {
+      select.disabled = !checkbox.checked;
+      if (!checkbox.checked) select.value = '';
+      onChange(opt.key, { enabled:checkbox.checked, years:checkbox.checked ? select.value : '' });
+    });
+    select.addEventListener('change', () => {
+      onChange(opt.key, { enabled:checkbox.checked, years:select.value });
+    });
+
+    label.append(checkbox, span, select);
+    container.appendChild(label);
+  });
+}
+async function fileToDataUrl(file){
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+function renderPhotoPreview(containerId, data){
+  const el = document.getElementById(containerId);
+  if (!data) {
+    el.innerHTML = '<span class="small muted">No image selected.</span>';
+    return;
+  }
+  el.innerHTML = `<a class="photo-preview" href="${data}" target="_blank" rel="noopener"><img src="${data}" alt="Serial number photo" /></a><a class="photo-link" href="${data}" target="_blank" rel="noopener">Open full image</a>`;
+}
 async function sendRmaEmail(payload){
   const { error } = await supabase.functions.invoke('send-rma-email', { body: payload });
-  if (error) {
-    console.error('Email function failed:', error);
-    showBanner('Email send failed, but database save still worked.', 'error');
-  }
+  if (error) { console.error('Email function failed:', error); showBanner('Email send failed, but database save still worked.', 'error'); }
 }
-
 async function loadRmas(){
   const { data, error } = await supabase.from('rmas').select('*').order('created_at', { ascending:false });
   if (error) { console.error(error); showBanner('Supabase load failed. Check your URL/key and table columns.', 'error'); return []; }
-  clearBanner();
-  return (data || []).map(mapRowToRecord);
+  clearBanner(); return (data || []).map(mapRowToRecord);
 }
 async function createRma(record){
   const { data, error } = await supabase.from('rmas').insert([mapRecordToRow(record)]).select();
-  if (error) { console.error(error); showBanner('Create RMA failed. Check RLS policies and table columns.', 'error'); return null; }
+  if (error) { console.error(error); showBanner('Create RMA failed. Check table columns and RLS.', 'error'); return null; }
   clearBanner(); return data?.[0] ? mapRowToRecord(data[0]) : null;
 }
 async function updateRma(id, updates){
   const { data, error } = await supabase.from('rmas').update({ ...mapRecordToRow(updates), updated_at:new Date().toISOString() }).eq('id', id).select();
-  if (error) { console.error(error); showBanner('Update failed. Check RLS policies.', 'error'); return null; }
+  if (error) { console.error(error); showBanner('Update failed. Check table columns and RLS.', 'error'); return null; }
   clearBanner(); return data?.[0] ? mapRowToRecord(data[0]) : null;
 }
-
 function getFilteredRecords(){
   return state.records
     .filter(r => state.tab === 'active' ? r.status !== 'completed' : state.tab === 'completed' ? r.status === 'completed' : true)
     .filter(r => state.statusFilter === 'all' ? true : r.status === state.statusFilter)
-    .filter(r => [r.orderNumber, r.rmaNumber, r.customerName, r.brandModel, r.serialNumber, r.reportedIssues, r.possibleIssues].join(' ').toLowerCase().includes(state.search.toLowerCase()))
+    .filter(r => [r.orderNumber, r.rmaNumber, r.customerName, r.brandModel, r.reportedIssues, r.possibleIssues].join(' ').toLowerCase().includes(state.search.toLowerCase()))
     .sort((a,b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
 }
 function getSelectedRecord(){ const filtered=getFilteredRecords(); return state.records.find(r => r.id === state.selectedId) || filtered[0] || null; }
-
 function renderSelectOptions(select, options, includeAll){
   select.innerHTML='';
   if (includeAll) {
@@ -219,15 +331,6 @@ function renderSelectOptions(select, options, includeAll){
   }
   options.forEach(option => {
     const opt=document.createElement('option'); opt.value=option.value; opt.textContent=option.label; select.appendChild(opt);
-  });
-}
-function renderWarrantyCheckboxes(container, flags, onChange){
-  container.innerHTML='';
-  warrantyOptions.forEach(option => {
-    const label=document.createElement('label'); label.className='warranty-item';
-    const input=document.createElement('input'); input.type='checkbox'; input.checked=Boolean(flags[option.key]); input.addEventListener('change',()=>onChange(option.key,input.checked));
-    const span=document.createElement('span'); span.textContent=option.label;
-    label.append(input, span); container.appendChild(label);
   });
 }
 function renderRecordList(){
@@ -238,7 +341,7 @@ function renderRecordList(){
   filtered.forEach(record => {
     const btn=document.createElement('button'); btn.className='record-item';
     if (record.id === state.selectedId) btn.classList.add('selected');
-    if (['waiting_parts','waiting_customer','sent_manufacturer','pay_shipping'].includes(record.status)) btn.classList.add('waiting');
+    if (['waiting_parts','waiting_customer','need_manufacturer_repair','pay_shipping'].includes(record.status)) btn.classList.add('waiting');
     btn.innerHTML = `
       <div class="record-top">
         <div>
@@ -261,7 +364,6 @@ function renderDetail(){
   const detail=document.getElementById('detailView'); const selected=getSelectedRecord();
   if (!selected) { detail.innerHTML='<div class="card empty">Select or create an RMA.</div>'; return; }
 
-  const warrantyHtml=warrantyOptions.map(option=>`<label class="warranty-item"><input type="checkbox" data-warranty-key="${option.key}" ${selected.warrantyFlags[option.key] ? 'checked' : ''} /><span>${escapeHtml(option.label)}</span></label>`).join('');
   const checklistHtml=selected.checklist.map((item,index)=>`<label class="check-item ${item.done ? 'done' : ''}"><input type="checkbox" data-check-index="${index}" ${item.done ? 'checked' : ''} /><span>${escapeHtml(item.label)}</span></label>${item.completedAt ? `<div class="muted tiny" style="margin:-4px 0 4px 30px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Completed ${new Date(item.completedAt).toLocaleString()}</div>` : ''}`).join('');
   const notesHtml=selected.notes.length ? selected.notes.map(note=>`<div class="note-box"><div class="small">${escapeHtml(note.text)}</div><div class="muted tiny" style="margin-top:8px;">${new Date(note.createdAt).toLocaleString()}</div></div>`).join('') : '<div class="muted small">No notes added yet.</div>';
 
@@ -273,25 +375,43 @@ function renderDetail(){
           <div class="muted">${escapeHtml(selected.customerName)}</div>
         </div>
       </div>
+
       <div class="grid-4">
         <div class="field"><label>Status</label><select id="detailStatus"></select></div>
         <div class="field"><label>Windows</label><select id="detailWindows"></select></div>
         <div class="field"><label>Device Type</label><select id="detailDeviceType"></select></div>
-        <div class="field"><label>RMA Number</label><input id="detailRmaNumberTop" inputmode="numeric" pattern="[0-9]*" value="${escapeAttr(selected.rmaNumber || '')}" /></div>
+        <div class="field"><label>RMA Number</label><input id="detailRmaNumber" inputmode="numeric" pattern="[0-9]*" value="${escapeAttr(selected.rmaNumber || '')}" /></div>
       </div>
-      <div style="margin-top:12px;"><div class="section-title">Warranty</div><div class="warranty-grid" id="detailWarrantyGrid">${warrantyHtml}</div><div class="grid-2" style="margin-top:10px;"><div class="field"><label>Purchase Date</label><input id="detailPurchaseDate" type="date" value="${escapeAttr(selected.purchaseDate || '')}" /></div></div></div>
-      <div class="grid-2" style="margin-top:12px;">
+
+      <div class="grid-3" style="margin-top:12px;">
+        <div class="field"><label>Purchase Date</label><input id="detailPurchaseDate" type="date" value="${escapeAttr(selected.purchaseDate || '')}" /></div>
         <div class="field"><label>Brand / Model</label><input id="detailBrandModel" value="${escapeAttr(selected.brandModel)}" /></div>
-        <div class="field"><label>Serial Number</label><input id="detailSerialNumber" value="${escapeAttr(selected.serialNumber)}" /></div>
+        <div class="field"><label>Warranty Summary</label><input value="${escapeAttr(warrantySummary(selected.warranty))}" readonly /></div>
       </div>
+
+      <div style="margin-top:12px;">
+        <div class="section-title">Warranty</div>
+        <div id="detailWarrantyGrid" class="warranty-grid"></div>
+      </div>
+
+      <div class="field-full" style="margin-top:12px;">
+        <label>Serial Number Photo</label>
+        <div class="photo-box">
+          <input id="detailSerialPhoto" type="file" accept="image/*" />
+          <div id="detailSerialPhotoPreview"></div>
+        </div>
+      </div>
+
       <div class="grid-2" style="margin-top:12px;">
         <div class="field"><label>Reported Issues</label><textarea id="detailReportedIssues">${escapeHtml(selected.reportedIssues)}</textarea></div>
         <div class="field"><label>Possible Issues / Observations</label><textarea id="detailPossibleIssues">${escapeHtml(selected.possibleIssues)}</textarea></div>
       </div>
+
       <div class="two-column" style="margin-top:12px;">
         <div class="card panel"><div class="section-title" style="margin-bottom:10px;">Completed Work Checklist</div><div class="checklist">${checklistHtml}</div></div>
         <div class="card panel"><div class="section-title" style="margin-bottom:10px;">Notes History</div><textarea id="quickNoteInput" placeholder="Add a quick note..." style="min-height:100px;"></textarea><button id="addNoteBtn" class="primary" style="margin-top:8px; width:100%;">Add Timestamped Note</button><div style="margin:12px 0; border-top:1px solid var(--line);"></div><div class="notes-list">${notesHtml}</div></div>
       </div>
+
       <div class="footer-meta" style="margin-top:12px;">
         <div>Created: ${selected.createdAt ? new Date(selected.createdAt).toLocaleString() : ''}</div>
         <div>Last Updated: ${selected.updatedAt ? new Date(selected.updatedAt).toLocaleString() : ''}</div>
@@ -313,16 +433,29 @@ function renderDetail(){
   detailWindows.addEventListener('change',()=>updateSelectedField('windowsEdition', detailWindows.value));
   detailDeviceType.addEventListener('change',()=>updateSelectedField('deviceType', detailDeviceType.value));
 
-  bindDetailInput('detailRmaNumberTop','rmaNumber',true);
+  bindDetailInput('detailRmaNumber','rmaNumber',true);
   bindDetailInput('detailPurchaseDate','purchaseDate');
   bindDetailInput('detailBrandModel','brandModel');
-  bindDetailInput('detailSerialNumber','serialNumber');
   bindDetailInput('detailReportedIssues','reportedIssues');
   bindDetailInput('detailPossibleIssues','possibleIssues');
 
-  document.querySelectorAll('[data-warranty-key]').forEach(el => {
-    el.addEventListener('change',e => updateSelectedWarrantyFlag(e.target.getAttribute('data-warranty-key'), e.target.checked));
+  renderWarrantyGrid(document.getElementById('detailWarrantyGrid'), selected.warranty, async (key, value) => {
+    const current = getSelectedRecord();
+    if (!current) return;
+    const saved = await updateRma(current.id, { ...current, warranty:{ ...current.warranty, [key]:value } });
+    if (saved) { state.records = state.records.map(r => r.id === saved.id ? saved : r); render(); }
   });
+  renderPhotoPreview('detailSerialPhotoPreview', selected.serialPhotoData);
+
+  document.getElementById('detailSerialPhoto').addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const dataUrl = await fileToDataUrl(file);
+    const current = getSelectedRecord();
+    const saved = await updateRma(current.id, { ...current, serialPhotoData:dataUrl });
+    if (saved) { state.records = state.records.map(r => r.id === saved.id ? saved : r); render(); }
+  });
+
   document.querySelectorAll('[data-check-index]').forEach(el => {
     el.addEventListener('change',e => toggleChecklist(Number(e.target.getAttribute('data-check-index'))));
   });
@@ -352,11 +485,6 @@ async function updateSelectedField(field, value){
     }
   }
 }
-async function updateSelectedWarrantyFlag(flag, checked){
-  const selected=getSelectedRecord(); if(!selected) return;
-  const saved=await updateRma(selected.id,{ ...selected, warrantyFlags:{ ...selected.warrantyFlags, [flag]:checked } });
-  if(saved){ state.records=state.records.map(r=>r.id===saved.id?saved:r); render(); }
-}
 async function toggleChecklist(index){
   const selected=getSelectedRecord(); if(!selected) return;
   const saved=await updateRma(selected.id,{ ...selected, checklist:selected.checklist.map((item,i)=>i!==index?item:{...item,done:!item.done,completedAt:!item.done?new Date().toISOString():null}) });
@@ -374,7 +502,6 @@ function populateCreateForm(){
   document.getElementById('formCustomerName').value=form.customerName;
   document.getElementById('formPurchaseDate').value=form.purchaseDate;
   document.getElementById('formBrandModel').value=form.brandModel;
-  document.getElementById('formSerialNumber').value=form.serialNumber;
   document.getElementById('formReportedIssues').value=form.reportedIssues;
   document.getElementById('formPossibleIssues').value=form.possibleIssues;
   renderSelectOptions(document.getElementById('formDeviceType'),deviceOptions,false);
@@ -383,11 +510,25 @@ function populateCreateForm(){
   document.getElementById('formDeviceType').value=form.deviceType;
   document.getElementById('formStatus').value=form.status;
   document.getElementById('formWindows').value=form.windowsEdition;
-  renderWarrantyCheckboxes(document.getElementById('formWarrantyFlags'),form.warrantyFlags,()=>{});
+  renderWarrantyGrid(document.getElementById('formWarrantyGrid'), form.warranty, (key, value) => {
+    const current = readCreateForm();
+    current.warranty[key] = value;
+  });
+  renderPhotoPreview('formSerialPhotoPreview', '');
+  state.createSerialPhotoData = '';
+  document.getElementById('formSerialPhoto').value = '';
+}
+function readWarrantyGrid(containerId){
+  const result = createDefaultForm().warranty;
+  document.querySelectorAll(`#${containerId} .warranty-item`).forEach((item, index) => {
+    const key = warrantyOptions[index].key;
+    const checkbox = item.querySelector('input[type="checkbox"]');
+    const select = item.querySelector('select');
+    result[key] = { enabled:checkbox.checked, years:checkbox.checked ? (select.value || '') : '' };
+  });
+  return result;
 }
 function readCreateForm(){
-  const warrantyFlags=createDefaultWarrantyFlags();
-  document.querySelectorAll('#formWarrantyFlags input[type="checkbox"]').forEach((checkbox,index)=>{ warrantyFlags[warrantyOptions[index].key]=checkbox.checked; });
   return {
     orderNumber:numbersOnly(document.getElementById('formOrderNumber').value.trim()),
     rmaNumber:numbersOnly(document.getElementById('formRmaNumber').value.trim()),
@@ -395,12 +536,12 @@ function readCreateForm(){
     deviceType:document.getElementById('formDeviceType').value,
     purchaseDate:document.getElementById('formPurchaseDate').value,
     brandModel:document.getElementById('formBrandModel').value.trim(),
-    serialNumber:document.getElementById('formSerialNumber').value.trim(),
-    warrantyFlags,
+    warranty:readWarrantyGrid('formWarrantyGrid'),
     windowsEdition:document.getElementById('formWindows').value,
     status:document.getElementById('formStatus').value,
     reportedIssues:document.getElementById('formReportedIssues').value.trim(),
-    possibleIssues:document.getElementById('formPossibleIssues').value.trim()
+    possibleIssues:document.getElementById('formPossibleIssues').value.trim(),
+    serialPhotoData:state.createSerialPhotoData || ''
   };
 }
 async function createRecordFromDialog(){
@@ -429,6 +570,12 @@ async function init(){
   document.getElementById('newRmaBtn').addEventListener('click',()=>{ populateCreateForm(); document.getElementById('rmaDialog').showModal(); });
   document.getElementById('cancelDialogBtn').addEventListener('click',()=>document.getElementById('rmaDialog').close());
   document.getElementById('createDialogBtn').addEventListener('click',createRecordFromDialog);
+  document.getElementById('formSerialPhoto').addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    state.createSerialPhotoData = await fileToDataUrl(file);
+    renderPhotoPreview('formSerialPhotoPreview', state.createSerialPhotoData);
+  });
 
   state.records=await loadRmas();
   state.selectedId=state.records[0]?.id || null;
