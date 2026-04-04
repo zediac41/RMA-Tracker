@@ -145,14 +145,7 @@
       <div class="field"><label>Device Type</label><select id="formDeviceType"></select></div>
       <div class="field"><label>RMA Number</label><input id="formRmaNumber" inputmode="numeric" pattern="[0-9]*" /></div>
       <div class="field"><label>Status</label><select id="formStatus"></select></div>
-      <div class="field"><label>Purchase Date</label><input id="formPurchaseDate" type="date" /></div>
       <div class="field"><label>Brand / Model</label><input id="formBrandModel" /></div>
-      <div class="field"><label>Windows</label><select id="formWindows"></select></div>
-    </div>
-
-    <div style="margin-top:12px;">
-      <div class="section-title">Warranty</div>
-      <div class="warranty-grid" id="formWarrantyGrid"></div>
     </div>
 
     <div class="field-full" style="margin-top:12px;">
@@ -591,20 +584,13 @@ function populateCreateForm(){
   document.getElementById('formOrderNumber').value=form.orderNumber;
   document.getElementById('formRmaNumber').value=form.rmaNumber;
   document.getElementById('formCustomerName').value=form.customerName;
-  document.getElementById('formPurchaseDate').value=form.purchaseDate;
   document.getElementById('formBrandModel').value=form.brandModel;
   document.getElementById('formReportedIssues').value=form.reportedIssues;
   document.getElementById('formPossibleIssues').value=form.possibleIssues;
   renderSelectOptions(document.getElementById('formDeviceType'),deviceOptions,false);
   renderSelectOptions(document.getElementById('formStatus'),statusOptions,false);
-  renderSelectOptions(document.getElementById('formWindows'),windowsOptions,false);
   document.getElementById('formDeviceType').value=form.deviceType;
   document.getElementById('formStatus').value=form.status;
-  document.getElementById('formWindows').value=form.windowsEdition;
-  renderWarrantyGrid(document.getElementById('formWarrantyGrid'), form.warranty, (key, value) => {
-    const current = readCreateForm();
-    current.warranty[key] = value;
-  });
   renderPhotoPreview('formSerialPhotoPreview', '');
   state.createSerialPhotoData = '';
   document.getElementById('formSerialPhoto').value = '';
