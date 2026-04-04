@@ -707,15 +707,19 @@ function readWarrantyGrid(containerId){
   return result;
 }
 function readCreateForm(){
+  const purchaseDateEl = document.getElementById('formPurchaseDate');
+  const warrantyGridEl = document.getElementById('formWarrantyGrid');
+  const windowsEl = document.getElementById('formWindows');
+
   return {
     orderNumber:numbersOnly(document.getElementById('formOrderNumber').value.trim()),
     rmaNumber:numbersOnly(document.getElementById('formRmaNumber').value.trim()),
     customerName:document.getElementById('formCustomerName').value.trim(),
     deviceType:document.getElementById('formDeviceType').value,
-    purchaseDate:document.getElementById('formPurchaseDate').value,
+    purchaseDate:purchaseDateEl ? purchaseDateEl.value : '',
     brandModel:document.getElementById('formBrandModel').value.trim(),
-    warranty:readWarrantyGrid('formWarrantyGrid'),
-    windowsEdition:document.getElementById('formWindows').value,
+    warranty:warrantyGridEl ? readWarrantyGrid('formWarrantyGrid') : createDefaultForm().warranty,
+    windowsEdition:windowsEl ? windowsEl.value : 'home',
     status:document.getElementById('formStatus').value,
     reportedIssues:document.getElementById('formReportedIssues').value.trim(),
     possibleIssues:document.getElementById('formPossibleIssues').value.trim(),
