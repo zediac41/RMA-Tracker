@@ -70,6 +70,19 @@
     .photo-preview { display:block; width:100%; max-width:260px; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#dfe5eb; }
     .photo-preview img { display:block; width:100%; height:auto; }
     .photo-link { text-decoration:none; color:var(--blue); font-size:12px; }
+    
+    .image-modal {
+      display:none; position:fixed; inset:0; background:rgba(15,23,42,.7); z-index:1000;
+      align-items:center; justify-content:center; padding:20px;
+    }
+    .image-modal.open { display:flex; }
+    .image-modal-card {
+      background:var(--card); border:1px solid var(--line); border-radius:16px; padding:12px; max-width:min(95vw,900px); max-height:95vh;
+      box-shadow:0 20px 60px rgba(15,23,42,.25);
+    }
+    .image-modal-card img { display:block; max-width:100%; max-height:calc(95vh - 80px); border-radius:10px; }
+    .image-modal-actions { display:flex; justify-content:flex-end; margin-top:10px; }
+
     @media (max-width:1100px){ .layout,.two-column{grid-template-columns:1fr}.grid-4{grid-template-columns:repeat(2,minmax(0,1fr))} }
     @media (max-width:700px){ .grid-4,.grid-2,.grid-3,.warranty-grid,.footer-meta{grid-template-columns:1fr 1fr}.topbar{flex-direction:column;align-items:stretch} }
     @media (max-width:520px){ .grid-4,.grid-2,.grid-3,.warranty-grid,.footer-meta,.tabs{grid-template-columns:1fr} button.primary{width:100%} .warranty-item{grid-template-columns:auto 1fr} .warranty-item select{grid-column:1 / -1;} }
@@ -100,6 +113,16 @@
       <div id="recordList" class="record-list"></div>
     </div>
     <div id="detailView"></div>
+  </div>
+</div>
+
+
+<div id="serialPhotoModal" class="image-modal" aria-hidden="true">
+  <div class="image-modal-card">
+    <img id="serialPhotoModalImg" src="" alt="Serial number photo" />
+    <div class="image-modal-actions">
+      <button id="closeSerialPhotoModal">Close</button>
+    </div>
   </div>
 </div>
 
@@ -296,7 +319,11 @@ function renderPhotoPreview(containerId, data){
     el.innerHTML = '<span class="small muted">No image selected.</span>';
     return;
   }
-  el.innerHTML = `<a class="photo-link" href="${data}" target="_blank" rel="noopener">View serial number photo</a>`;
+  el.innerHTML = '<button type="button" id="viewSerialPhotoBtn">View serial number photo</button>';
+  const btn = document.getElementById('viewSerialPhotoBtn');
+  if (btn) {
+    btn.addEventListener('click', () => openSerialPhotoModal(data));
+  }
 }
 async function sendRmaEmail(payload){
   const { error } = await supabase.functions.invoke('send-rma-email', { body: payload });
@@ -556,6 +583,22 @@ async function createRecordFromDialog(){
   render();
   await sendRmaEmail({ eventType:'create_rma', orderNumber:created.orderNumber, rmaNumber:created.rmaNumber, customerName:created.customerName, status:created.status, reportedIssues:created.reportedIssues, possibleIssues:created.possibleIssues });
 }
+
+function openSerialPhotoModal(data){
+  const modal = document.getElementById('serialPhotoModal');
+  const img = document.getElementById('serialPhotoModalImg');
+  img.src = data;
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+}
+function closeSerialPhotoModal(){
+  const modal = document.getElementById('serialPhotoModal');
+  const img = document.getElementById('serialPhotoModalImg');
+  img.src = '';
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+}
+
 async function init(){
   if(SUPABASE_URL.includes('PASTE_YOUR_PROJECT_URL_HERE') || SUPABASE_PUBLISHABLE_KEY.includes('PASTE_YOUR_PUBLISHABLE_KEY_HERE')) showBanner('Supabase URL/key still need to be pasted into index.html before the app can connect.','error');
   else showBanner('Connecting to Supabase...','info');
@@ -568,6 +611,11 @@ async function init(){
   document.getElementById('searchInput').addEventListener('input',e=>{ state.search=e.target.value; render(); });
   document.getElementById('statusFilter').addEventListener('change',e=>{ state.statusFilter=e.target.value; render(); });
   document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',()=>{ state.tab=btn.getAttribute('data-tab'); render(); }));
+  document.getElementById('closeSerialPhotoModal').addEventListener('click', closeSerialPhotoModal);
+  document.getElementById('serialPhotoModal').addEventListener('click', (e) => {
+    if (e.target.id === 'serialPhotoModal') closeSerialPhotoModal();
+  });
+
   document.getElementById('newRmaBtn').addEventListener('click',()=>{ populateCreateForm(); document.getElementById('rmaDialog').showModal(); });
   document.getElementById('cancelDialogBtn').addEventListener('click',()=>document.getElementById('rmaDialog').close());
   document.getElementById('createDialogBtn').addEventListener('click',createRecordFromDialog);
